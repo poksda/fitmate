@@ -21,9 +21,9 @@ services:
         sync: false
 
   # --- Веб-панель тренера ---
-  - type: static
+  - type: web
     name: fitmate-web
-    rootDir: .
+    runtime: static
     buildCommand: npm install && npm run build --workspace @fitmate/web
     staticPublishPath: ./apps/web/dist
     envVars:
@@ -31,9 +31,9 @@ services:
         value: https://fitmate-api.onrender.com/api/trainer
 
   # --- Telegram Mini App (клиент) ---
-  - type: static
+  - type: web
     name: fitmate-miniapp
-    rootDir: .
+    runtime: static
     buildCommand: npm install && npm run build --workspace @fitmate/miniapp
     staticPublishPath: ./apps/miniapp/dist
     envVars:
