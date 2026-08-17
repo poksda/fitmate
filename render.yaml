@@ -28,7 +28,7 @@ services:
     staticPublishPath: ./apps/web/dist
     envVars:
       - key: VITE_API_URL
-        value: https://fitmate-api.onrender.com/api/trainer
+        value: https://fitmate-api-6ako.onrender.com/api/trainer
 
   # --- Telegram Mini App (клиент) ---
   - type: web
@@ -38,4 +38,4 @@ services:
     staticPublishPath: ./apps/miniapp/dist
     envVars:
       - key: VITE_API_URL
-        value: https://fitmate-api.onrender.com/api/bot
+        value: https://fitmate-api-6ako.onrender.com/api/bot
