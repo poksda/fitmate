@@ -1,0 +1,276 @@
+import { FastifyInstance } from 'fastify';
+import { query } from '../db.js';
+
+function requireBotKey(app: FastifyInstance) {
+  return async (request: any, reply: any) => {
+    const key = request.headers['x-bot-key'];
+    if (key !== process.env.BOT_API_KEY) {
+      return reply.code(401).send({ error: 'Нет доступа' });
+    }
+  };
+}
+
+/** Проверка подписи Telegram initData (у нас нет доступа к токену бота в API — для MVP сверяем только базово) */
+function parseInitData(initData: string): {
+  user?: { id: number; first_name?: string; last_name?: string; username?: string };
+} {
+  try {
+    const params = new URLSearchParams(initData);
+    const userRaw = params.get('user');
+    return userRaw ? { user: JSON.parse(userRaw) } : {};
+  } catch {
+    return {};
+  }
+}
+
+export async function botRoutes(app: FastifyInstance) {
+  app.addHook('preHandler', requireBotKey(app));
+
+  // Вход клиента через Telegram Mini App (initData)
+  // body: { init_data, trainer_code? }
+  app.post('/tg-login', async (request, reply) => {
+    const { init_data, trainer_code } = request.body as {
+      init_data: string;
+      trainer_code?: string;
+    };
+    if (!init_data) {
+      return reply.code(400).send({ error: 'Нет init_data' });
+    }
+
+    const { user } = parseInitData(init_data);
+    if (!user?.id) {
+      return reply.code(400).send({ error: 'Нет данных пользователя' });
+    }
+    const telegramId = user.id;
+    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Клиент';
+
+    // Если это новый пользователь — нужен код тренера
+    const existing = await query<{ id: number; trainer_id: number }>(
+      `SELECT cp.id, cp.trainer_id FROM client_profiles cp
+       JOIN users u ON u.id = cp.user_id
+       WHERE u.telegram_id = $1`,
+      [telegramId],
+    );
+
+    let clientId: number;
+    let trainerId: number;
+    let newUser = false;
+
+    if (existing.length > 0) {
+      clientId = existing[0].id;
+      trainerId = existing[0].trainer_id;
+    } else {
+      if (!trainer_code) {
+        return reply.code(428).send({ needs_trainer_code: true });
+      }
+      const trainers = await query<{ id: number; name: string }>(
+        `SELECT id, name FROM users
+         WHERE role = 'trainer' AND lower(name) = lower($1)`,
+        [trainer_code],
+      );
+      if (trainers.length === 0) {
+        return reply.code(404).send({ error: 'Тренер не найден' });
+      }
+      trainerId = trainers[0].id;
+
+      const created = await query<{ id: number }>(
+        `INSERT INTO users (role, name, telegram_id)
+         VALUES ('client', $1, $2) RETURNING id`,
+        [name, telegramId],
+      );
+      const userId = created[0].id;
+      const profile = await query<{ id: number }>(
+        `INSERT INTO client_profiles (user_id, trainer_id)
+         VALUES ($1, $2) RETURNING id`,
+        [userId, trainerId],
+      );
+      clientId = profile[0].id;
+      newUser = true;
+    }
+
+    const trainer = await query<{ id: number; name: string }>(
+      'SELECT id, name FROM users WHERE id = $1',
+      [trainerId],
+    );
+
+    return {
+      client_id: clientId,
+      trainer: trainer[0],
+      new_user: newUser,
+    };
+  });
+
+
+  // Вход/регистрация клиента по telegram_id
+  // body: { telegram_id, name, trainer_code }
+  app.post('/login', async (request, reply) => {
+    const { telegram_id, name, trainer_code } = request.body as {
+      telegram_id: number;
+      name: string;
+      trainer_code: string;
+    };
+    if (!telegram_id || !name || !trainer_code) {
+      return reply.code(400).send({ error: 'Не хватает данных' });
+    }
+
+    // Находим тренера по коду (имя тренера, например — упрощение для MVP)
+    const trainers = await query<{ id: number; name: string }>(
+      `SELECT id, name FROM users
+       WHERE role = 'trainer' AND lower(name) = lower($1)`,
+      [trainer_code],
+    );
+    if (trainers.length === 0) {
+      return reply.code(404).send({ error: 'Тренер не найден' });
+    }
+    const trainer = trainers[0];
+
+    // Ищем клиента по telegram_id
+    let clients = await query<{ id: number; trainer_id: number }>(
+      `SELECT cp.id, cp.trainer_id FROM client_profiles cp
+       JOIN users u ON u.id = cp.user_id
+       WHERE u.telegram_id = $1`,
+      [telegram_id],
+    );
+
+    let clientId: number;
+    if (clients.length === 0) {
+      const created = await query<{ id: number }>(
+        `INSERT INTO users (role, name, telegram_id)
+         VALUES ('client', $1, $2) RETURNING id`,
+        [name, telegram_id],
+      );
+      const userId = created[0].id;
+      const profile = await query<{ id: number }>(
+        `INSERT INTO client_profiles (user_id, trainer_id)
+         VALUES ($1, $2) RETURNING id`,
+        [userId, trainer.id],
+      );
+      clientId = profile[0].id;
+    } else {
+      clientId = clients[0].id;
+    }
+
+    return { client_id: clientId, trainer: { id: trainer.id, name: trainer.name } };
+  });
+
+  // Тренировки клиента
+  // GET /api/bot/workouts?client_id=1
+  app.get('/workouts', async (request, reply) => {
+    const { client_id } = request.query as { client_id: string };
+    if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
+
+    const rows = await query(
+      `SELECT id, client_id, scheduled_at, completed_at, general_note, trainer_summary, author, created_at
+       FROM workouts WHERE client_id = $1 ORDER BY scheduled_at DESC`,
+      [client_id],
+    );
+    return { workouts: rows };
+  });
+
+  // Создать тренировку (может вызвать тренер через бота или клиент)
+  app.post('/workouts', async (request, reply) => {
+    const { client_id, scheduled_at, general_note, author } = request.body as {
+      client_id: number;
+      scheduled_at: string;
+      general_note?: string;
+      author: 'trainer' | 'client';
+    };
+    if (!client_id || !scheduled_at || !author) {
+      return reply.code(400).send({ error: 'Не хватает данных' });
+    }
+
+    const rows = await query(
+      `INSERT INTO workouts (client_id, scheduled_at, general_note, author)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [client_id, scheduled_at, general_note ?? null, author],
+    );
+    return { workout: rows[0] };
+  });
+
+  // Добавить упражнение к тренировке
+  app.post('/workouts/:id/exercises', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { name, note, author } = request.body as {
+      name: string;
+      note?: string;
+      author: 'trainer' | 'client';
+    };
+    if (!name || !author) return reply.code(400).send({ error: 'Не хватает данных' });
+
+    const rows = await query(
+      `INSERT INTO exercises (workout_id, name, note, author)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [id, name, note ?? null, author],
+    );
+    return { exercise: rows[0] };
+  });
+
+  // Добавить подход к упражнению
+  app.post('/exercises/:id/sets', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { set_number, weight_kg, reps, technique_ok, author } = request.body as {
+      set_number: number;
+      weight_kg?: number;
+      reps?: number;
+      technique_ok?: boolean;
+      author: 'trainer' | 'client';
+    };
+    if (!set_number || !author) return reply.code(400).send({ error: 'Не хватает данных' });
+
+    const rows = await query(
+      `INSERT INTO sets (exercise_id, set_number, weight_kg, reps, technique_ok, author)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [id, set_number, weight_kg ?? null, reps ?? null, technique_ok ?? null, author],
+    );
+    return { set: rows[0] };
+  });
+
+  // Завершить тренировку
+  app.post('/workouts/:id/complete', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { trainer_summary, general_note } = request.body as {
+      trainer_summary?: string;
+      general_note?: string;
+    };
+
+    const rows = await query(
+      `UPDATE workouts
+       SET completed_at = now(),
+           trainer_summary = COALESCE($2, trainer_summary),
+           general_note = COALESCE($3, general_note)
+       WHERE id = $1 RETURNING *`,
+      [id, trainer_summary ?? null, general_note ?? null],
+    );
+    return { workout: rows[0] };
+  });
+
+  // Прогресс: записать вес тела / замер
+  app.post('/progress', async (request, reply) => {
+    const { client_id, weight_kg, note } = request.body as {
+      client_id: number;
+      weight_kg?: number;
+      note?: string;
+    };
+    if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
+
+    const rows = await query(
+      `INSERT INTO progress_entries (client_id, weight_kg, note)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [client_id, weight_kg ?? null, note ?? null],
+    );
+    return { entry: rows[0] };
+  });
+
+  // История прогресса
+  app.get('/progress', async (request, reply) => {
+    const { client_id } = request.query as { client_id: string };
+    if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
+
+    const rows = await query(
+      `SELECT id, client_id, weight_kg, measurements, note, created_at
+       FROM progress_entries WHERE client_id = $1 ORDER BY created_at ASC`,
+      [client_id],
+    );
+    return { entries: rows };
+  });
+}

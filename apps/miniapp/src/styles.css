@@ -1,0 +1,499 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0b1220;
+  --bg-soft: #0f1a2e;
+  --panel: #111c33;
+  --panel-2: #16243f;
+  --border: #1e3054;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --text: #e6edf7;
+  --text-soft: #93a4c0;
+  --text-muted: #5c6f91;
+  --success: #34d399;
+  --danger: #f87171;
+  --warn: #fbbf24;
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.screen {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 16px 32px;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: var(--text-muted);
+}
+
+/* ---------- Вход ---------- */
+
+.login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background:
+    radial-gradient(600px 400px at 80% -10%, rgba(59, 130, 246, 0.18), transparent 60%),
+    var(--bg);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 340px;
+  background: linear-gradient(180deg, var(--panel), var(--bg-soft));
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 36px 28px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
+.logo-big {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.5);
+}
+
+.login-card h1 {
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 16px;
+}
+
+/* ---------- Элементы ---------- */
+
+.input {
+  padding: 13px 14px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  width: 100%;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:focus {
+  border-color: var(--accent);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn:hover {
+  background: var(--accent-hover);
+}
+
+.btn-block {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.btn.finish {
+  background: var(--success);
+}
+
+.btn.finish:hover {
+  background: #10b981;
+}
+
+.link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 14px;
+}
+
+/* ---------- Шапка экрана ---------- */
+
+.screen-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.screen-head h1 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn.small {
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+}
+
+/* ---------- Дом ---------- */
+
+.home-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.hello {
+  font-size: 16px;
+  color: var(--text-soft);
+}
+
+.trainer {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+}
+
+.hero-card {
+  background: linear-gradient(135deg, #1a2b52, #132042);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 18px;
+  padding: 24px 22px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.hero-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.hero-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.hero-sub {
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.hero-big {
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.hero-btn {
+  margin-top: 6px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-soft);
+  margin: 20px 0 12px;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.action-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-soft);
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.action-icon {
+  font-size: 24px;
+}
+
+.next-card {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.next-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.next-date {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 6px;
+  text-transform: capitalize;
+}
+
+/* ---------- Тренировка ---------- */
+
+.workout-meta {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 16px;
+  text-transform: capitalize;
+}
+
+.ex-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.ex-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ex-card-head strong {
+  font-size: 15px;
+}
+
+.sets {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.set-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-soft);
+}
+
+.set-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--accent-soft, rgba(59, 130, 246, 0.15));
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.add-form {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+}
+
+/* ---------- Прогресс ---------- */
+
+.diff {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.diff.down {
+  color: var(--success);
+}
+
+.diff.up {
+  color: var(--warn);
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 130px;
+  margin-top: 16px;
+  padding: 10px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+}
+
+.bar {
+  width: 100%;
+  max-width: 30px;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, #3b82f6, #1d4ed8);
+}
+
+.bar-label {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ---------- История ---------- */
+
+.hist-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.hist-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hist-date {
+  font-weight: 600;
+  text-transform: capitalize;
+  font-size: 14px;
+}
+
+.status {
+  font-size: 16px;
+}
+
+.hist-ex {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 0;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+}
