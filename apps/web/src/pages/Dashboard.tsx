@@ -40,6 +40,9 @@ export function Dashboard() {
 
   if (loading) return <div className="wrap">Загрузка…</div>;
 
+  const activeCount = clients.filter((c) => c.status !== 'inactive').length;
+  const totalWorkouts = clients.reduce((sum, c) => sum + (c.workout_count ?? 0), 0);
+
   return (
     <div className="wrap">
       <header className="topbar">
@@ -56,6 +59,21 @@ export function Dashboard() {
           <Icon name="logout" size={15} /> Выйти
         </button>
       </header>
+
+      <div className="hero-stats">
+        <div className="hero-stat">
+          <div className="hero-stat-value">{clients.length}</div>
+          <div className="hero-stat-label">Клиентов</div>
+        </div>
+        <div className="hero-stat">
+          <div className="hero-stat-value">{activeCount}</div>
+          <div className="hero-stat-label">Активных</div>
+        </div>
+        <div className="hero-stat">
+          <div className="hero-stat-value">{totalWorkouts}</div>
+          <div className="hero-stat-label">Тренировок</div>
+        </div>
+      </div>
 
       <div className="section-title">
         <div className="icon"><Icon name="users" size={16} /></div>
@@ -79,10 +97,13 @@ export function Dashboard() {
             to={`/clients/${c.client_profile_id}`}
             className="card client-card"
           >
-            <h3>
-              {c.name}
-              {c.status === 'inactive' && <span className="badge-inactive">неактивен</span>}
-            </h3>
+            <div className="client-head">
+              <div className="client-avatar">{c.name.charAt(0).toUpperCase()}</div>
+              <h3>
+                {c.name}
+                {c.status === 'inactive' && <span className="badge-inactive">неактивен</span>}
+              </h3>
+            </div>
             <div className="stat-row">
               {c.weight_kg !== null && (
                 <div className="stat">

@@ -151,7 +151,7 @@ export function ClientPage() {
         <Icon name="back" size={16} /> Назад
       </Link>
 
-      <header className="topbar" style={{ border: 'none', marginBottom: 8 }}>
+      <header className="topbar">
         <div className="brand">
           <div className="logo">
             <Icon name="dumbbell" size={20} />
