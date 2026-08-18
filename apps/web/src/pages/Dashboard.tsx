@@ -41,7 +41,10 @@ export function Dashboard() {
   if (loading) return <div className="wrap">Загрузка…</div>;
 
   const activeCount = clients.filter((c) => c.status !== 'inactive').length;
-  const totalWorkouts = clients.reduce((sum, c) => sum + (c.workout_count ?? 0), 0);
+  const totalWorkouts = clients.reduce(
+    (sum, c) => sum + (Number(c.workout_count) || 0),
+    0,
+  );
 
   return (
     <div className="wrap">

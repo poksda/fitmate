@@ -87,7 +87,7 @@ export async function trainerRoutes(app: FastifyInstance) {
     const rows = await query(
       `SELECT cp.id AS client_profile_id, cp.weight_kg, cp.goals, cp.status, cp.workouts_left,
               u.id AS user_id, u.name, u.telegram_id,
-              (SELECT count(*) FROM workouts w
+              (SELECT count(*)::int FROM workouts w
                 WHERE w.client_id = cp.id AND w.completed_at IS NOT NULL) AS workout_count
        FROM client_profiles cp
        JOIN users u ON u.id = cp.user_id
