@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS client_profiles (
   id            BIGSERIAL PRIMARY KEY,
   user_id       BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  trainer_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  trainer_id    BIGINT REFERENCES users(id) ON DELETE CASCADE,
   weight_kg     NUMERIC(5,1),
   goals         TEXT,
   status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),

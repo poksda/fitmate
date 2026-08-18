@@ -47,6 +47,9 @@ export const api = {
       '/me',
     ),
 
+  unbind: () =>
+    request<{ ok: boolean }>('/unbind', { method: 'POST', body: '{}' }),
+
   getProgress: (clientId: number) =>
     request<{ entries: any[] }>(`/progress?client_id=${clientId}`),
 

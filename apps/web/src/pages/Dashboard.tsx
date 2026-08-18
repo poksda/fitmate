@@ -44,7 +44,9 @@ export function Dashboard() {
     <div className="wrap">
       <header className="topbar">
         <div className="brand">
-          <div className="logo">F</div>
+          <div className="logo">
+            <Icon name="dumbbell" size={20} />
+          </div>
           <div>
             <h1>FitMate</h1>
             {trainerName && <div className="tag">Тренер · {trainerName}</div>}

@@ -72,6 +72,14 @@ body {
   box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
 }
 
+.auth-card .logo {
+  width: 52px;
+  height: 52px;
+  font-size: 24px;
+  border-radius: 14px;
+  margin-bottom: 4px;
+}
+
 .brand h1 {
   font-size: 22px;
   font-weight: 700;
@@ -275,14 +283,6 @@ a.card:hover {
   gap: 14px;
 }
 
-.auth-card .logo {
-  width: 52px;
-  height: 52px;
-  font-size: 24px;
-  border-radius: 14px;
-  margin-bottom: 4px;
-}
-
 .auth-card h1 {
   font-size: 26px;
   font-weight: 800;
@@ -462,8 +462,8 @@ td {
 }
 
 .profile-item {
-  background: var(--panel);
-  border: 1px solid var(--border);
+  background: linear-gradient(160deg, var(--panel), var(--bg-soft));
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   padding: 16px;
 }

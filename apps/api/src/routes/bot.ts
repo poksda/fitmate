@@ -79,18 +79,18 @@ export async function botRoutes(app: FastifyInstance) {
     }
     const telegramId = user.id;
     const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Клиент';
-
-    const existing = await query<{ id: number; trainer_id: number }>(
+const existing = await query<{ id: number; trainer_id: number | null }>(
       `SELECT cp.id, cp.trainer_id FROM client_profiles cp
        JOIN users u ON u.id = cp.user_id
        WHERE u.telegram_id = $1`,
       [telegramId],
     );
+
     let clientId: number;
     let trainerId: number;
     let newUser = false;
 
-    if (existing.length > 0) {
+    if (existing.length > 0 && existing[0].trainer_id) {
       clientId = existing[0].id;
       trainerId = existing[0].trainer_id;
     } else {
@@ -107,19 +107,28 @@ export async function botRoutes(app: FastifyInstance) {
       }
       trainerId = trainers[0].id;
 
-      const created = await query<{ id: number }>(
-        `INSERT INTO users (role, name, telegram_id)
-         VALUES ('client', $1, $2) RETURNING id`,
-        [name, telegramId],
-      );
-      const userId = created[0].id;
-      const profile = await query<{ id: number }>(
-        `INSERT INTO client_profiles (user_id, trainer_id)
-         VALUES ($1, $2) RETURNING id`,
-        [userId, trainerId],
-      );
-      clientId = profile[0].id;
-      newUser = true;
+      if (existing.length > 0) {
+        // Клиент уже есть, но отвязан от тренера — привязываем заново
+        const updated = await query<{ id: number }>(
+          `UPDATE client_profiles SET trainer_id = $2 WHERE id = $1 RETURNING id`,
+          [existing[0].id, trainerId],
+        );
+        clientId = updated[0].id;
+      } else {
+        const created = await query<{ id: number }>(
+          `INSERT INTO users (role, name, telegram_id)
+           VALUES ('client', $1, $2) RETURNING id`,
+          [name, telegramId],
+        );
+        const userId = created[0].id;
+        const profile = await query<{ id: number }>(
+          `INSERT INTO client_profiles (user_id, trainer_id)
+           VALUES ($1, $2) RETURNING id`,
+          [userId, trainerId],
+        );
+        clientId = profile[0].id;
+        newUser = true;
+      }
     }
 
     const trainer = await query<{ id: number; name: string }>(
@@ -156,6 +165,19 @@ export async function botRoutes(app: FastifyInstance) {
     );
     if (rows.length === 0) return reply.code(404).send({ error: 'Клиент не найден' });
     return { client: rows[0] };
+  });
+
+  // Отвязаться от тренера: клиент уходит от текущего тренера
+  app.post('/unbind', async (request, reply) => {
+    const clientId = (request.user as any)?.clientId ?? (request.user as any)?.id;
+    const rows = await query(
+      `UPDATE client_profiles
+       SET trainer_id = NULL, status = 'active', workouts_left = NULL
+       WHERE id = $1 RETURNING id`,
+      [clientId],
+    );
+    if (rows.length === 0) return reply.code(404).send({ error: 'Клиент не найден' });
+    return { ok: true };
   });
 
   // Вход/регистрация клиента по telegram_id (устаревший, для совместимости)

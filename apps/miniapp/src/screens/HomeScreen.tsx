@@ -50,7 +50,13 @@ export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }:
           <div className="hello">Привет</div>
           <div className="trainer">Твой тренер · {session.trainerName}</div>
         </div>
-        <div className="avatar">{session.trainerName.charAt(0).toUpperCase()}</div>
+        <button
+          className="avatar-btn"
+          onClick={() => onNavigate('profile')}
+          aria-label="Профиль"
+        >
+          <div className="avatar">{session.trainerName.charAt(0).toUpperCase()}</div>
+        </button>
       </header>
 
       {status === 'inactive' ? (

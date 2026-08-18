@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { api } from '../api';
+import { Icon } from '../Icon';
 
 export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -29,7 +30,9 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
   return (
     <div className="auth-wrap">
       <form className="auth-card" onSubmit={submit}>
-        <div className="logo">F</div>
+        <div className="logo">
+          <Icon name="dumbbell" size={26} />
+        </div>
         <h1>FitMate</h1>
         <p className="subtitle">Панель тренера</p>
 

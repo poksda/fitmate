@@ -17,6 +17,9 @@ async function migrate() {
      CHECK (status IN ('active', 'inactive'))`,
   );
   await pool.query('ALTER TABLE client_profiles ADD COLUMN IF NOT EXISTS workouts_left INT');
+  await pool.query(
+    'ALTER TABLE client_profiles ALTER COLUMN trainer_id DROP NOT NULL',
+  );
   console.log('Схема применена успешно');
   await pool.end();
 }

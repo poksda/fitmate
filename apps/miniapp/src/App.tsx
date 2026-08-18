@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from './api';
+import { setAuthToken } from './api';
 import { getInitData, getTgUser } from './tg';
 import { LoginScreen } from './screens/LoginScreen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -7,6 +8,7 @@ import { WorkoutScreen } from './screens/WorkoutScreen';
 import { ProgressScreen } from './screens/ProgressScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { NewWorkoutScreen } from './screens/NewWorkoutScreen';
+import { ProfileScreen } from './screens/ProfileScreen';
 
 export type Session = {
   clientId: number;
@@ -15,7 +17,7 @@ export type Session = {
   workoutsLeft: number | null;
 };
 
-export type Screen = 'home' | 'workout' | 'new' | 'progress' | 'history';
+export type Screen = 'home' | 'workout' | 'new' | 'progress' | 'history' | 'profile';
 
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -39,7 +41,7 @@ export function App() {
           workoutsLeft: res.client?.workouts_left ?? null,
         });
       } catch {
-        // 428 — новый пользователь, нужен код тренера → покажем LoginScreen
+        // 428 — новый пользователь или отвязанный клиент, нужен код тренера → LoginScreen
       } finally {
         setChecking(false);
       }
@@ -60,6 +62,11 @@ export function App() {
       author: 'client',
     });
     openWorkout(workout.id);
+  };
+
+  const handleUnbound = () => {
+    setAuthToken(null);
+    setSession(null);
   };
 
   if (checking) return <div className="screen loading">Загрузка…</div>;
@@ -111,6 +118,13 @@ export function App() {
           session={session}
           onOpenWorkout={openWorkout}
           onBack={() => setScreen('home')}
+        />
+      )}
+      {screen === 'profile' && (
+        <ProfileScreen
+          session={session}
+          onBack={() => setScreen('home')}
+          onUnbound={handleUnbound}
         />
       )}
     </div>

@@ -153,7 +153,9 @@ export function ClientPage() {
 
       <header className="topbar" style={{ border: 'none', marginBottom: 8 }}>
         <div className="brand">
-          <div className="logo">F</div>
+          <div className="logo">
+            <Icon name="dumbbell" size={20} />
+          </div>
           <div>
             <h1 style={{ fontSize: 26 }}>{client.name}</h1>
             <div className="tag">Карточка клиента</div>
