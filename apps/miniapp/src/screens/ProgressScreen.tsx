@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { Session } from '../App';
+import { Icon } from '../Icon';
 
 type Props = {
   session: Session;
@@ -36,7 +37,7 @@ export function ProgressScreen({ session, onBack }: Props) {
   return (
     <div>
       <header className="screen-head">
-        <button className="icon-btn" onClick={onBack}>←</button>
+        <button className="icon-btn" onClick={onBack}><Icon name="back" /></button>
         <h1>Прогресс</h1>
         <span />
       </header>

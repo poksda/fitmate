@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { Icon } from '../Icon';
 
 type Client = {
   client_profile_id: number;
@@ -50,12 +51,12 @@ export function Dashboard() {
           </div>
         </div>
         <button onClick={logout} className="btn btn-ghost">
-          Выйти
+          <Icon name="logout" size={15} /> Выйти
         </button>
       </header>
 
       <div className="section-title">
-        <div className="icon">👥</div>
+        <div className="icon"><Icon name="users" size={16} /></div>
         Мои клиенты
       </div>
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Icon } from '../Icon';
 
 const PRESETS = [
   'Грудь и бицепс',
@@ -23,7 +24,7 @@ export function NewWorkoutScreen({
   return (
     <div>
       <header className="screen-head">
-        <button className="icon-btn" onClick={onBack}>←</button>
+        <button className="icon-btn" onClick={onBack}><Icon name="back" /></button>
         <h1>Новая тренировка</h1>
         <span />
       </header>
@@ -60,7 +61,7 @@ export function NewWorkoutScreen({
         </form>
       ) : (
         <button className="btn btn-block ghost" onClick={() => setCustomMode(true)}>
-          ✍️ Своё название
+          <Icon name="pen" size={16} /> Своё название
         </button>
       )}
     </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api';
+import { Icon } from '../Icon';
 
 type SetRow = {
   id: number;
@@ -147,7 +148,7 @@ export function ClientPage() {
   return (
     <div className="wrap">
       <Link to="/" className="back-link">
-        ← Назад
+        <Icon name="back" size={16} /> Назад
       </Link>
 
       <header className="topbar" style={{ border: 'none', marginBottom: 8 }}>
@@ -179,7 +180,7 @@ export function ClientPage() {
 
       <div className="card manage-card">
         <div className="section-title" style={{ margin: '0 0 12px' }}>
-          <div className="icon">⚙️</div>
+          <div className="icon"><Icon name="gear" size={16} /></div>
           Управление клиентом
         </div>
 
@@ -217,14 +218,14 @@ export function ClientPage() {
 
       {client.goals && (
         <p className="muted" style={{ marginTop: 16 }}>
-          🎯 {client.goals}
+          <Icon name="target" size={15} /> {client.goals}
         </p>
       )}
 
       {(progress.length > 0 || latestWeight) && (
         <>
           <div className="section-title">
-            <div className="icon">⚖️</div>
+            <div className="icon"><Icon name="scale" size={16} /></div>
             Прогресс веса
           </div>
           <div className="card">
@@ -252,7 +253,7 @@ export function ClientPage() {
       )}
 
       <div className="section-title">
-        <div className="icon">🏋️</div>
+        <div className="icon"><Icon name="dumbbell" size={16} /></div>
         Тренировки
       </div>
 
@@ -291,7 +292,7 @@ export function ClientPage() {
           <div key={w.id} className="card workout-card">
             <div className="head">
               <h3>
-                {w.name ? `${w.name} · ` : ''}🗓 {date}
+                {w.name ? `${w.name} · ` : ''}{date}
               </h3>
               <span className={`status ${done ? 'done' : 'open'}`}>
                 {done ? 'Выполнена' : 'Запланирована'}
@@ -327,8 +328,8 @@ export function ClientPage() {
                             {s.technique_ok === null
                               ? '—'
                               : s.technique_ok
-                                ? '✅'
-                                : '❌'}
+                                ? <Icon name="check" size={15} />
+                                : <span style={{ color: 'var(--danger)' }}>✕</span>}
                           </td>
                           <td>
                             <span className={`author-badge ${s.author === 'client' ? 'client' : ''}`}>
@@ -435,7 +436,11 @@ export function ClientPage() {
                   setCommentText(w.trainer_summary ?? '');
                 }}
               >
-                {w.trainer_summary ? '✏️ Изменить заметку' : '💬 Добавить заметку клиенту'}
+                {w.trainer_summary ? (
+                  <><Icon name="pen" size={14} /> Изменить заметку</>
+                ) : (
+                  <><Icon name="chat" size={14} /> Добавить заметку клиенту</>
+                )}
               </button>
             )}
           </div>

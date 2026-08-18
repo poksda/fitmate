@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import { Session } from '../App';
+import { Icon } from '../Icon';
 
 type Props = {
   session: Session;
@@ -102,7 +103,7 @@ export function WorkoutScreen({ session, workoutId, onBack }: Props) {
   return (
     <div>
       <header className="screen-head">
-        <button className="icon-btn" onClick={onBack}>←</button>
+        <button className="icon-btn" onClick={onBack}><Icon name="back" /></button>
         <h1>{workout.name || 'Тренировка'}</h1>
         <span />
       </header>
@@ -119,7 +120,7 @@ export function WorkoutScreen({ session, workoutId, onBack }: Props) {
           <div className="ex-card-head">
             <strong>{ex.name}</strong>
             <button className="icon-btn small" onClick={() => setActiveExerciseId(ex.id)}>
-              +
+              <Icon name="plus" size={16} />
             </button>
           </div>
           {ex.sets.length > 0 && (
@@ -129,7 +130,9 @@ export function WorkoutScreen({ session, workoutId, onBack }: Props) {
                   <span className="set-num">{s.set_number}</span>
                   <span className="set-weight">{s.weight_kg ?? '—'} кг</span>
                   <span className="set-reps">× {s.reps ?? '—'}</span>
-                  <span className="set-author">{s.author === 'trainer' ? '👨‍🏫' : '🙂'}</span>
+                  <span className="set-author">
+                    {s.author === 'trainer' ? 'тренер' : 'ты'}
+                  </span>
                 </div>
               ))}
             </div>

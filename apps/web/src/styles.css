@@ -5,29 +5,31 @@
 }
 
 :root {
-  --bg: #0b1220;
-  --bg-soft: #0f1a2e;
-  --panel: #111c33;
-  --panel-2: #16243f;
-  --border: #1e3054;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --accent-soft: rgba(59, 130, 246, 0.12);
-  --text: #e6edf7;
-  --text-soft: #93a4c0;
-  --text-muted: #5c6f91;
-  --success: #34d399;
-  --danger: #f87171;
-  --warn: #fbbf24;
+  --bg: #0a0a0a;
+  --bg-soft: #111111;
+  --panel: #151515;
+  --panel-2: #1c1c1c;
+  --border: #242424;
+  --border-strong: #2f2f2f;
+  --accent: #22c55e;
+  --accent-hover: #16a34a;
+  --accent-soft: rgba(34, 197, 94, 0.1);
+  --accent-dim: rgba(34, 197, 94, 0.18);
+  --text: #f4f4f5;
+  --text-soft: #a1a1aa;
+  --text-muted: #71717a;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warn: #f59e0b;
   --radius: 14px;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 body {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(59, 130, 246, 0.15), transparent 60%),
-    radial-gradient(900px 500px at -10% 110%, rgba(59, 130, 246, 0.08), transparent 60%),
+    radial-gradient(1200px 600px at 80% -10%, rgba(34, 197, 94, 0.05), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(34, 197, 94, 0.03), transparent 60%),
     var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -60,14 +62,14 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(135deg, #22c55e, #15803d);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
   font-size: 18px;
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+  color: #052e16;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
 }
 
 .brand h1 {
@@ -127,7 +129,7 @@ h2 {
 
 a.card:hover {
   transform: translateY(-3px);
-  border-color: rgba(59, 130, 246, 0.6);
+  border-color: rgba(34, 197, 94, 0.5);
 }
 
 .client-grid {
@@ -150,7 +152,7 @@ a.card:hover {
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 20px;
-  background: rgba(248, 113, 113, 0.15);
+  background: rgba(239, 68, 68, 0.12);
   color: var(--danger);
 }
 
@@ -341,12 +343,12 @@ a.card:hover {
 }
 
 .status.done {
-  background: rgba(52, 211, 153, 0.15);
+  background: rgba(34, 197, 94, 0.12);
   color: var(--success);
 }
 
 .status.open {
-  background: rgba(251, 191, 36, 0.15);
+  background: rgba(245, 158, 11, 0.12);
   color: var(--warn);
 }
 
@@ -370,13 +372,13 @@ a.card:hover {
   font-size: 11px;
   padding: 2px 8px;
   border-radius: 20px;
-  background: var(--accent-soft);
+  background: rgba(34, 197, 94, 0.12);
   color: var(--accent);
   font-weight: 500;
 }
 
 .author-badge.client {
-  background: rgba(52, 211, 153, 0.12);
+  background: rgba(34, 197, 94, 0.1);
   color: var(--success);
 }
 
@@ -410,7 +412,7 @@ td {
   margin-top: 14px;
   padding: 12px 14px;
   background: var(--accent-soft);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  border: 1px solid rgba(34, 197, 94, 0.25);
   border-radius: 10px;
   font-size: 14px;
   color: var(--text);

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { Session } from '../App';
-
+import { Icon } from '../Icon';
 type Props = {
   session: Session;
   onOpenWorkout: (id: number) => void;
@@ -22,11 +22,10 @@ export function HistoryScreen({ session, onOpenWorkout, onBack }: Props) {
   return (
     <div>
       <header className="screen-head">
-        <button className="icon-btn" onClick={onBack}>←</button>
+        <button className="icon-btn" onClick={onBack}><Icon name="back" /></button>
         <h1>История</h1>
         <span />
       </header>
-
       {workouts.length === 0 && !loading && (
         <div className="empty">Пока нет тренировок</div>
       )}
@@ -45,9 +44,7 @@ export function HistoryScreen({ session, onOpenWorkout, onBack }: Props) {
                   weekday: 'short',
                 })}
               </div>
-              <span className={`status ${done ? 'done' : 'open'}`}>
-                {done ? '✅' : '⏳'}
-              </span>
+              <span className={`status-icon-dot ${done ? 'done' : 'open'}`} />
             </div>
             {w.name && (
               <div className="hist-date-sub">

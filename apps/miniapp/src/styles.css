@@ -5,19 +5,22 @@
 }
 
 :root {
-  --bg: #0b1220;
-  --bg-soft: #0f1a2e;
-  --panel: #111c33;
-  --panel-2: #16243f;
-  --border: #1e3054;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --text: #e6edf7;
-  --text-soft: #93a4c0;
-  --text-muted: #5c6f91;
-  --success: #34d399;
-  --danger: #f87171;
-  --warn: #fbbf24;
+  --bg: #0a0a0a;
+  --bg-soft: #111111;
+  --panel: #151515;
+  --panel-2: #1c1c1c;
+  --border: #242424;
+  --border-strong: #2f2f2f;
+  --accent: #22c55e;
+  --accent-hover: #16a34a;
+  --accent-soft: rgba(34, 197, 94, 0.1);
+  --accent-dim: rgba(34, 197, 94, 0.18);
+  --text: #f4f4f5;
+  --text-soft: #a1a1aa;
+  --text-muted: #71717a;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warn: #f59e0b;
 }
 
 body {
@@ -31,7 +34,7 @@ body {
 .screen {
   max-width: 480px;
   margin: 0 auto;
-  padding: 20px 16px 32px;
+  padding: 24px 20px 40px;
 }
 
 .loading {
@@ -51,7 +54,7 @@ body {
   justify-content: center;
   padding: 20px;
   background:
-    radial-gradient(600px 400px at 80% -10%, rgba(59, 130, 246, 0.18), transparent 60%),
+    radial-gradient(500px 300px at 80% -10%, rgba(34, 197, 94, 0.08), transparent 60%),
     var(--bg);
 }
 
@@ -61,8 +64,8 @@ body {
   background: linear-gradient(180deg, var(--panel), var(--bg-soft));
   border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 36px 28px;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+  padding: 40px 28px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
   text-align: center;
 }
 
@@ -71,14 +74,14 @@ body {
   height: 64px;
   margin: 0 auto 16px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(135deg, #22c55e, #15803d);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 30px;
   font-weight: 800;
-  color: #fff;
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.5);
+  color: #052e16;
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.35);
 }
 
 .login-card h1 {
@@ -127,11 +130,11 @@ body {
   gap: 8px;
   padding: 13px 20px;
   background: var(--accent);
-  color: #fff;
+  color: #052e16;
   border: none;
   border-radius: 12px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.15s ease;
 }
@@ -146,16 +149,16 @@ body {
 }
 
 .btn.finish {
-  background: var(--success);
+  background: var(--accent);
 }
 
 .btn.finish:hover {
-  background: #10b981;
+  background: var(--accent-hover);
 }
 
 .btn.ghost {
   background: transparent;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   color: var(--text-soft);
 }
 
@@ -184,7 +187,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .screen-head h1 {
@@ -193,40 +196,47 @@ body {
 }
 
 .icon-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   background: var(--panel);
   border: 1px solid var(--border);
-  color: var(--text);
+  color: var(--text-soft);
   font-size: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.icon-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .icon-btn.small {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   font-size: 14px;
 }
 
-/* ---------- Дом ---------- */
+/* ---------- Дом (главный экран) ---------- */
 
 .home-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.hello {
-  font-size: 16px;
-  color: var(--text-soft);
+.greeting .hello {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
 }
 
-.trainer {
+.greeting .trainer {
   font-size: 13px;
   color: var(--text-muted);
   margin-top: 2px;
@@ -236,40 +246,126 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(135deg, #22c55e, #15803d);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 18px;
-  color: #fff;
+  color: #052e16;
 }
 
+/* -------- Статус / абонемент -------- */
+
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1px solid;
+}
+
+.status-banner .status-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-banner.inactive {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.status-banner.inactive .status-icon {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+}
+
+.status-banner.warn {
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.status-banner.warn .status-icon {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--warn);
+}
+
+.status-banner.ok {
+  background: rgba(34, 197, 94, 0.05);
+  border-color: rgba(34, 197, 94, 0.22);
+}
+
+.status-banner.ok .status-icon {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--accent);
+}
+
+.status-banner-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.status-banner-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* -------- Карточка следующей тренировки -------- */
+
 .hero-card {
-  background: linear-gradient(135deg, #1a2b52, #132042);
-  border: 1px solid rgba(59, 130, 246, 0.35);
+  position: relative;
+  background: linear-gradient(160deg, #1a1a1a, #121212);
+  border: 1px solid var(--border-strong);
   border-radius: 18px;
-  padding: 24px 22px;
+  padding: 26px 22px;
   margin-bottom: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.12), transparent 70%);
+  pointer-events: none;
 }
 
 .hero-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
-  margin-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+.hero-label svg {
+  color: var(--accent);
 }
 
 .hero-title {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 14px;
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
 }
 
 .hero-sub {
-  color: var(--text-soft);
+  color: var(--text-muted);
   font-size: 14px;
 }
 
@@ -280,69 +376,26 @@ body {
 }
 
 .hero-btn {
-  margin-top: 6px;
+  margin-top: 16px;
+  width: 100%;
 }
 
-/* ---------- Статус / абонемент ---------- */
+/* -------- Быстрые действия -------- */
 
-.status-banner {
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 20px;
-  border: 1px solid;
-}
-
-.status-banner.inactive {
-  background: rgba(248, 113, 113, 0.1);
-  border-color: rgba(248, 113, 113, 0.35);
-}
-
-.status-banner.warn {
-  background: rgba(251, 191, 36, 0.1);
-  border-color: rgba(251, 191, 36, 0.35);
-}
-
-.status-banner.ok {
-  background: rgba(52, 211, 153, 0.08);
-  border-color: rgba(52, 211, 153, 0.25);
-}
-
-.status-banner-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.status-banner.inactive .status-banner-title {
-  color: var(--danger);
-}
-
-.status-banner.warn .status-banner-title {
-  color: var(--warn);
-}
-
-.status-banner.ok .status-banner-title {
-  color: var(--success);
-}
-
-.status-banner-sub {
+.quick-title {
   font-size: 13px;
-  color: var(--text-soft);
-  margin-top: 4px;
-}
-
-.section-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-soft);
-  margin: 20px 0 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 24px 0 12px;
 }
 
 .actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .action-card {
@@ -355,18 +408,42 @@ body {
   align-items: center;
   gap: 10px;
   color: var(--text-soft);
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
+  transition: transform 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.action-card:hover {
+.action-card .action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-soft);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.action-card:hover,
+.action-card:active {
   transform: translateY(-2px);
-  border-color: var(--accent);
+  border-color: var(--accent-dim);
 }
 
-.action-icon {
-  font-size: 24px;
+.action-card:hover .action-icon,
+.action-card:active .action-icon {
+  background: var(--accent-soft);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-soft);
+  margin: 20px 0 12px;
 }
 
 .next-card {
@@ -436,7 +513,7 @@ body {
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  background: var(--accent-soft, rgba(59, 130, 246, 0.15));
+  background: var(--accent-soft);
   color: var(--accent);
   display: flex;
   align-items: center;
@@ -457,34 +534,7 @@ body {
 .set-author {
   margin-left: auto;
   font-size: 14px;
-}
-
-/* ---------- Новая тренировка ---------- */
-
-.preset-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.preset-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 18px 14px;
-  color: var(--text-soft);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: center;
-  transition: transform 0.15s, border-color 0.15s;
-}
-
-.preset-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent);
-  color: var(--text);
+  color: var(--text-muted);
 }
 
 .add-form {
@@ -507,6 +557,34 @@ body {
 .row {
   display: flex;
   gap: 10px;
+}
+
+/* ---------- Новая тренировка ---------- */
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.preset-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 14px;
+  color: var(--text-soft);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.preset-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-dim);
+  color: var(--text);
 }
 
 /* ---------- Прогресс ---------- */
@@ -550,7 +628,7 @@ body {
   width: 100%;
   max-width: 30px;
   border-radius: 6px 6px 0 0;
-  background: linear-gradient(180deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(180deg, #22c55e, #15803d);
 }
 
 .bar-label {
@@ -567,6 +645,11 @@ body {
   padding: 16px;
   margin-bottom: 12px;
   cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.hist-card:hover {
+  border-color: var(--border-strong);
 }
 
 .hist-head {
@@ -588,8 +671,18 @@ body {
   text-transform: capitalize;
 }
 
-.status {
-  font-size: 16px;
+.status-icon-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-icon-dot.done {
+  background: var(--accent);
+}
+
+.status-icon-dot.open {
+  background: var(--warn);
 }
 
 .hist-ex {
