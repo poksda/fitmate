@@ -39,8 +39,11 @@ function parseUser(initData: string): {
   }
 }
 
-/** Защита: либо x-bot-key (старые интеграции), либо JWT клиента */
+/** Защита: либо x-bot-key (старые интеграции), либо JWT клиента. /tg-login — публичный. */
 async function auth(request: FastifyRequest, reply: FastifyReply) {
+  if (request.url.endsWith('/tg-login')) {
+    return;
+  }
   const key = request.headers['x-bot-key'];
   if (key === process.env.BOT_API_KEY) {
     return;
