@@ -191,14 +191,31 @@ export async function botRoutes(app: FastifyInstance) {
     return { client_id: clientId, trainer: { id: trainer.id, name: trainer.name } };
   });
 
-  // Тренировки клиента
+  // Тренировки клиента (с упражнениями и подходами)
   app.get('/workouts', async (request, reply) => {
     const { client_id } = request.query as { client_id: string };
     if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
 
     const rows = await query(
-      `SELECT id, client_id, scheduled_at, completed_at, name, general_note, trainer_summary, author, created_at
-       FROM workouts WHERE client_id = $1 ORDER BY scheduled_at DESC`,
+      `SELECT w.id, w.client_id, w.scheduled_at, w.completed_at, w.name,
+              w.general_note, w.trainer_summary, w.author, w.created_at,
+              (SELECT json_agg(
+                 json_build_object(
+                   'id', e.id, 'name', e.name, 'note', e.note, 'author', e.author,
+                   'sets', COALESCE((
+                     SELECT json_agg(json_build_object(
+                       'id', s.id, 'set_number', s.set_number, 'weight_kg', s.weight_kg,
+                       'reps', s.reps, 'technique_ok', s.technique_ok, 'author', s.author
+                     ) ORDER BY s.set_number)
+                     FROM sets s WHERE s.exercise_id = e.id
+                   ), '[]'::json)
+                 )
+                 ORDER BY e.order_index, e.id)
+               FROM exercises e WHERE e.workout_id = w.id
+              ) AS exercises
+       FROM workouts w
+       WHERE w.client_id = $1
+       ORDER BY w.scheduled_at DESC`,
       [client_id],
     );
     return { workouts: rows };
