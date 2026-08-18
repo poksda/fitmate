@@ -1,4 +1,5 @@
-import { Bot, InlineKeyboard } from 'grammy';
+import { Bot, InlineKeyboard, webhookCallback } from 'grammy';
+import { createServer } from 'node:http';
 import { config } from './config.js';
 
 const bot = new Bot(config.botToken);
@@ -48,5 +49,18 @@ bot.catch((err) => {
   console.error('Bot error:', err);
 });
 
-bot.start();
-console.log('FitMate бот запущен');
+// На Render работаем через webhook, локально — через long polling
+const webhookBase = process.env.WEBHOOK_URL ?? process.env.RENDER_EXTERNAL_URL;
+
+if (webhookBase) {
+  const webhookPath = '/webhook';
+  const webhookUrl = `${webhookBase}${webhookPath}`;
+  const server = createServer(webhookCallback(bot, 'http'));
+  server.listen(Number(process.env.PORT ?? 8080), async () => {
+    await bot.api.setWebhook(webhookUrl);
+    console.log(`FitMate бот запущен (webhook: ${webhookUrl})`);
+  });
+} else {
+  bot.start();
+  console.log('FitMate бот запущен (long polling)');
+}

@@ -41,3 +41,20 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://fitmate-api-6ako.onrender.com/api/bot
+
+  # --- Telegram бот (webhook) ---
+  - type: web
+    name: fitmate-bot
+    runtime: node
+    rootDir: .
+    buildCommand: npm install && npm run build --workspace @fitmate/bot
+    startCommand: node apps/bot/dist/index.js
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: BOT_TOKEN
+        sync: false
+      - key: BOT_API_KEY
+        sync: false
+      - key: MINIAPP_URL
+        value: https://fitmate-miniapp.onrender.com
