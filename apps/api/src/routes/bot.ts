@@ -1,33 +1,61 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { createHmac } from 'node:crypto';
 import { query } from '../db.js';
 
-function requireBotKey(app: FastifyInstance) {
-  return async (request: any, reply: any) => {
-    const key = request.headers['x-bot-key'];
-    if (key !== process.env.BOT_API_KEY) {
-      return reply.code(401).send({ error: 'Нет доступа' });
-    }
-  };
+/** Проверка подписи Telegram initData согласно документации Bot API */
+function verifyInitData(initData: string, botToken: string): boolean {
+  try {
+    const params = new URLSearchParams(initData);
+    const hash = params.get('hash');
+    if (!hash) return false;
+    params.delete('hash');
+
+    const dataCheckString = [...params.entries()]
+      .map(([k, v]) => `${k}=${v}`)
+      .sort()
+      .join('\n');
+
+    const secretKey = createHmac('sha256', 'WebAppData').update(botToken).digest();
+    const computed = createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+
+    return computed === hash;
+  } catch {
+    return false;
+  }
 }
 
-/** Проверка подписи Telegram initData (у нас нет доступа к токену бота в API — для MVP сверяем только базово) */
-function parseInitData(initData: string): {
-  user?: { id: number; first_name?: string; last_name?: string; username?: string };
+function parseUser(initData: string): {
+  id?: number;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
 } {
   try {
     const params = new URLSearchParams(initData);
     const userRaw = params.get('user');
-    return userRaw ? { user: JSON.parse(userRaw) } : {};
+    return userRaw ? JSON.parse(userRaw) : {};
   } catch {
     return {};
   }
 }
 
-export async function botRoutes(app: FastifyInstance) {
-  app.addHook('preHandler', requireBotKey(app));
+/** Защита: либо x-bot-key (старые интеграции), либо JWT клиента */
+async function auth(request: FastifyRequest, reply: FastifyReply) {
+  const key = request.headers['x-bot-key'];
+  if (key === process.env.BOT_API_KEY) {
+    return;
+  }
+  try {
+    await request.jwtVerify();
+    return;
+  } catch {
+    return reply.code(401).send({ error: 'Нет доступа' });
+  }
+}
 
+export async function botRoutes(app: FastifyInstance) {
   // Вход клиента через Telegram Mini App (initData)
-  // body: { init_data, trainer_code? }
+  // Публичный: безопасность обеспечивается подписью initData
   app.post('/tg-login', async (request, reply) => {
     const { init_data, trainer_code } = request.body as {
       init_data: string;
@@ -37,14 +65,18 @@ export async function botRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Нет init_data' });
     }
 
-    const { user } = parseInitData(init_data);
-    if (!user?.id) {
+    const botToken = process.env.BOT_TOKEN ?? '';
+    if (!verifyInitData(init_data, botToken)) {
+      return reply.code(401).send({ error: 'Недействительная подпись Telegram' });
+    }
+
+    const user = parseUser(init_data);
+    if (!user.id) {
       return reply.code(400).send({ error: 'Нет данных пользователя' });
     }
     const telegramId = user.id;
     const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Клиент';
 
-    // Если это новый пользователь — нужен код тренера
     const existing = await query<{ id: number; trainer_id: number }>(
       `SELECT cp.id, cp.trainer_id FROM client_profiles cp
        JOIN users u ON u.id = cp.user_id
@@ -93,16 +125,21 @@ export async function botRoutes(app: FastifyInstance) {
       [trainerId],
     );
 
+    // Выдаём JWT клиенту — им защищены все остальные эндпоинты
+    const token = app.jwt.sign({ id: clientId, role: 'client', clientId });
+
     return {
+      token,
       client_id: clientId,
       trainer: trainer[0],
       new_user: newUser,
     };
   });
 
+  // Все остальные маршруты бота — под защитой (x-bot-key или JWT)
+  app.addHook('preHandler', auth);
 
-  // Вход/регистрация клиента по telegram_id
-  // body: { telegram_id, name, trainer_code }
+  // Вход/регистрация клиента по telegram_id (устаревший, для совместимости)
   app.post('/login', async (request, reply) => {
     const { telegram_id, name, trainer_code } = request.body as {
       telegram_id: number;
@@ -113,7 +150,6 @@ export async function botRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Не хватает данных' });
     }
 
-    // Находим тренера по коду (имя тренера, например — упрощение для MVP)
     const trainers = await query<{ id: number; name: string }>(
       `SELECT id, name FROM users
        WHERE role = 'trainer' AND lower(name) = lower($1)`,
@@ -124,7 +160,6 @@ export async function botRoutes(app: FastifyInstance) {
     }
     const trainer = trainers[0];
 
-    // Ищем клиента по telegram_id
     let clients = await query<{ id: number; trainer_id: number }>(
       `SELECT cp.id, cp.trainer_id FROM client_profiles cp
        JOIN users u ON u.id = cp.user_id
@@ -154,7 +189,6 @@ export async function botRoutes(app: FastifyInstance) {
   });
 
   // Тренировки клиента
-  // GET /api/bot/workouts?client_id=1
   app.get('/workouts', async (request, reply) => {
     const { client_id } = request.query as { client_id: string };
     if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
@@ -167,7 +201,7 @@ export async function botRoutes(app: FastifyInstance) {
     return { workouts: rows };
   });
 
-  // Создать тренировку (может вызвать тренер через бота или клиент)
+  // Создать тренировку
   app.post('/workouts', async (request, reply) => {
     const { client_id, scheduled_at, general_note, author } = request.body as {
       client_id: number;

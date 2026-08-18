@@ -1,10 +1,17 @@
 const API_URL = import.meta.env.VITE_API_URL ?? '/api/bot';
 
+let authToken: string | null = null;
+
+export function setAuthToken(token: string | null) {
+  authToken = token;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       ...(options.headers ?? {}),
     },
   });
@@ -19,12 +26,16 @@ export const api = {
   // Вход через Telegram initData (id и имя берём из Telegram)
   tgLogin: (initData: string, trainerCode?: string) =>
     request<{
+      token: string;
       client_id: number;
       trainer: { id: number; name: string };
       new_user?: boolean;
     }>('/tg-login', {
       method: 'POST',
       body: JSON.stringify({ init_data: initData, trainer_code: trainerCode }),
+    }).then((r) => {
+      setAuthToken(r.token);
+      return r;
     }),
 
   getWorkouts: (clientId: number) =>
