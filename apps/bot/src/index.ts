@@ -55,7 +55,15 @@ const webhookBase = process.env.WEBHOOK_URL ?? process.env.RENDER_EXTERNAL_URL;
 if (webhookBase) {
   const webhookPath = '/webhook';
   const webhookUrl = `${webhookBase}${webhookPath}`;
-  const server = createServer(webhookCallback(bot, 'http'));
+  const server = createServer(async (req, res) => {
+    if (req.url === '/' || req.url === '/health') {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('ok');
+      return;
+    }
+    const handler = webhookCallback(bot, 'http');
+    await handler(req, res);
+  });
   server.listen(Number(process.env.PORT ?? 8080), async () => {
     await bot.api.setWebhook(webhookUrl);
     console.log(`FitMate бот запущен (webhook: ${webhookUrl})`);
