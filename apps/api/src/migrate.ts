@@ -10,6 +10,7 @@ async function migrate() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const sql = readFileSync(join(__dirname, 'schema.sql'), 'utf8');
   await pool.query(sql);
+  await pool.query('ALTER TABLE workouts ADD COLUMN IF NOT EXISTS name TEXT');
   console.log('Схема применена успешно');
   await pool.end();
 }

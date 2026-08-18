@@ -6,13 +6,14 @@ import { HomeScreen } from './screens/HomeScreen';
 import { WorkoutScreen } from './screens/WorkoutScreen';
 import { ProgressScreen } from './screens/ProgressScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
+import { NewWorkoutScreen } from './screens/NewWorkoutScreen';
 
 export type Session = {
   clientId: number;
   trainerName: string;
 };
 
-export type Screen = 'home' | 'workout' | 'progress' | 'history';
+export type Screen = 'home' | 'workout' | 'new' | 'progress' | 'history';
 
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -44,6 +45,16 @@ export function App() {
     setScreen('workout');
   };
 
+  const createWorkout = async (name: string) => {
+    const { workout } = await api.createWorkout({
+      client_id: session!.clientId,
+      scheduled_at: new Date().toISOString(),
+      name,
+      author: 'client',
+    });
+    openWorkout(workout.id);
+  };
+
   if (checking) return <div className="screen loading">Загрузка…</div>;
 
   if (!session) {
@@ -63,7 +74,14 @@ export function App() {
         <HomeScreen
           session={session}
           onOpenWorkout={openWorkout}
+          onNewWorkout={() => setScreen('new')}
           onNavigate={setScreen}
+        />
+      )}
+      {screen === 'new' && (
+        <NewWorkoutScreen
+          onSelect={createWorkout}
+          onBack={() => setScreen('home')}
         />
       )}
       {screen === 'workout' && (

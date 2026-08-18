@@ -29,7 +29,7 @@ export function WorkoutScreen({ session, workoutId, onBack }: Props) {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [exerciseName, setExerciseName] = useState('');
-  const [activeExercise, setActiveExercise] = useState<Exercise | null>(null);
+  const [activeExerciseId, setActiveExerciseId] = useState<number | null>(null);
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
 
@@ -61,17 +61,18 @@ export function WorkoutScreen({ session, workoutId, onBack }: Props) {
     }
   }, [workoutId, load, session.clientId]);
 
+  const exercises: Exercise[] = workout?.exercises ?? [];
+  const activeExercise =
+    exercises.find((x) => x.id === activeExerciseId) ?? null;
+
   const addExercise = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!exerciseName.trim() || !workout) return;
-    await api.addExercise(workout.id, exerciseName.trim(), 'client');
+    const { exercise } = await api.addExercise(workout.id, exerciseName.trim(), 'client');
     setExerciseName('');
     setAdding(false);
     await load(workout.id);
-    const ex = (workout.exercises ?? []).find(
-      (x: any) => x.name.toLowerCase() === exerciseName.trim().toLowerCase(),
-    );
-    if (ex) setActiveExercise(ex);
+    setActiveExerciseId(exercise.id);
   };
 
   const addSet = async (e: React.FormEvent) => {
@@ -102,7 +103,7 @@ export function WorkoutScreen({ session, workoutId, onBack }: Props) {
     <div>
       <header className="screen-head">
         <button className="icon-btn" onClick={onBack}>←</button>
-        <h1>Тренировка</h1>
+        <h1>{workout.name || 'Тренировка'}</h1>
         <span />
       </header>
 
@@ -113,11 +114,11 @@ export function WorkoutScreen({ session, workoutId, onBack }: Props) {
         })}
       </div>
 
-      {(workout.exercises ?? []).map((ex: Exercise) => (
+      {exercises.map((ex) => (
         <div key={ex.id} className="ex-card">
           <div className="ex-card-head">
             <strong>{ex.name}</strong>
-            <button className="icon-btn small" onClick={() => setActiveExercise(ex)}>
+            <button className="icon-btn small" onClick={() => setActiveExerciseId(ex.id)}>
               +
             </button>
           </div>
@@ -126,8 +127,9 @@ export function WorkoutScreen({ session, workoutId, onBack }: Props) {
               {ex.sets.map((s) => (
                 <div key={s.id} className="set-row">
                   <span className="set-num">{s.set_number}</span>
-                  <span>{s.weight_kg ?? '—'} кг</span>
-                  <span>× {s.reps ?? '—'}</span>
+                  <span className="set-weight">{s.weight_kg ?? '—'} кг</span>
+                  <span className="set-reps">× {s.reps ?? '—'}</span>
+                  <span className="set-author">{s.author === 'trainer' ? '👨‍🏫' : '🙂'}</span>
                 </div>
               ))}
             </div>
@@ -155,7 +157,7 @@ export function WorkoutScreen({ session, workoutId, onBack }: Props) {
             />
           </div>
           <button className="btn" type="submit">Добавить подход</button>
-          <button className="link" type="button" onClick={() => setActiveExercise(null)}>
+          <button className="link" type="button" onClick={() => setActiveExerciseId(null)}>
             Закрыть
           </button>
         </form>

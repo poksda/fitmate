@@ -39,7 +39,7 @@ export function HistoryScreen({ session, onOpenWorkout, onBack }: Props) {
           <div key={w.id} className="hist-card" onClick={() => onOpenWorkout(w.id)}>
             <div className="hist-head">
               <div className="hist-date">
-                {date.toLocaleDateString('ru-RU', {
+                {w.name || date.toLocaleDateString('ru-RU', {
                   day: 'numeric',
                   month: 'short',
                   weekday: 'short',
@@ -49,6 +49,14 @@ export function HistoryScreen({ session, onOpenWorkout, onBack }: Props) {
                 {done ? '✅' : '⏳'}
               </span>
             </div>
+            {w.name && (
+              <div className="hist-date-sub">
+                {date.toLocaleDateString('ru-RU', {
+                  day: 'numeric',
+                  month: 'short',
+                })}
+              </div>
+            )}
             {exercises.length > 0 && (
               <div className="hist-ex">
                 {exercises.slice(0, 3).map((ex: any) => ex.name).join(', ')}

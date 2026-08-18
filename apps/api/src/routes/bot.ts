@@ -197,7 +197,7 @@ export async function botRoutes(app: FastifyInstance) {
     if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
 
     const rows = await query(
-      `SELECT id, client_id, scheduled_at, completed_at, general_note, trainer_summary, author, created_at
+      `SELECT id, client_id, scheduled_at, completed_at, name, general_note, trainer_summary, author, created_at
        FROM workouts WHERE client_id = $1 ORDER BY scheduled_at DESC`,
       [client_id],
     );
@@ -206,9 +206,10 @@ export async function botRoutes(app: FastifyInstance) {
 
   // Создать тренировку
   app.post('/workouts', async (request, reply) => {
-    const { client_id, scheduled_at, general_note, author } = request.body as {
+    const { client_id, scheduled_at, name, general_note, author } = request.body as {
       client_id: number;
       scheduled_at: string;
+      name?: string;
       general_note?: string;
       author: 'trainer' | 'client';
     };
@@ -217,9 +218,9 @@ export async function botRoutes(app: FastifyInstance) {
     }
 
     const rows = await query(
-      `INSERT INTO workouts (client_id, scheduled_at, general_note, author)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [client_id, scheduled_at, general_note ?? null, author],
+      `INSERT INTO workouts (client_id, scheduled_at, name, general_note, author)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [client_id, scheduled_at, name ?? null, general_note ?? null, author],
     );
     return { workout: rows[0] };
   });

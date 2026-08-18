@@ -47,9 +47,10 @@ export const api = {
   createWorkout: (body: {
     client_id: number;
     scheduled_at: string;
+    name?: string;
     general_note?: string;
     author: 'trainer' | 'client';
-  }) => request<{ workout: { id: number } }>('/workouts', {
+  }) => request<{ workout: { id: number; name?: string } }>('/workouts', {
     method: 'POST',
     body: JSON.stringify(body),
   }),

@@ -5,34 +5,31 @@ import { Session, Screen } from '../App';
 type Props = {
   session: Session;
   onOpenWorkout: (id: number) => void;
+  onNewWorkout: () => void;
   onNavigate: (s: Screen) => void;
 };
 
-export function HomeScreen({ session, onOpenWorkout, onNavigate }: Props) {
+export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }: Props) {
   const [upcoming, setUpcoming] = useState<any>(null);
-  const [nextWorkout, setNextWorkout] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api
       .getWorkouts(session.clientId)
       .then((res) => {
-        const open = res.workouts.filter((w) => !w.completed_at);
-        const last = open[0] ?? null;
-        setUpcoming(last);
-        setNextWorkout(last);
+        const open = res.workouts.find((w) => !w.completed_at);
+        setUpcoming(open ?? null);
       })
       .finally(() => setLoading(false));
   }, [session.clientId]);
 
-  const startNew = async () => {
-    const { workout } = await api.createWorkout({
-      client_id: session.clientId,
-      scheduled_at: new Date().toISOString(),
-      author: 'client',
-    });
-    onOpenWorkout(workout.id);
-  };
+  const heroDate = upcoming
+    ? new Date(upcoming.scheduled_at).toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        weekday: 'long',
+      })
+    : null;
 
   return (
     <div>
@@ -44,28 +41,35 @@ export function HomeScreen({ session, onOpenWorkout, onNavigate }: Props) {
         <div className="avatar">{session.trainerName.charAt(0).toUpperCase()}</div>
       </header>
 
-      <section className="hero-card">
-        <div className="hero-label">Сегодня</div>
-        {loading ? (
+      {loading ? (
+        <section className="hero-card">
+          <div className="hero-label">Сегодня</div>
           <div className="hero-title">Загрузка…</div>
-        ) : upcoming ? (
-          <>
-            <div className="hero-title">Тренировка готова</div>
-            <button className="btn hero-btn" onClick={() => onOpenWorkout(upcoming.id)}>
-              Начать тренировку
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="hero-title">День отдыха</div>
-            <p className="hero-sub">Хороший день, чтобы восстановиться</p>
-          </>
-        )}
-      </section>
+        </section>
+      ) : upcoming ? (
+        <section className="hero-card">
+          <div className="hero-label">{heroDate}</div>
+          <div className="hero-title">
+            {upcoming.name || 'Тренировка'}
+          </div>
+          <button className="btn hero-btn" onClick={() => onOpenWorkout(upcoming.id)}>
+            Начать тренировку
+          </button>
+        </section>
+      ) : (
+        <section className="hero-card">
+          <div className="hero-label">Сегодня</div>
+          <div className="hero-title">День отдыха</div>
+          <p className="hero-sub">Нет запланированных тренировок</p>
+          <button className="btn hero-btn" onClick={onNewWorkout}>
+            Создать тренировку
+          </button>
+        </section>
+      )}
 
       <div className="section-title">Быстрые действия</div>
       <div className="actions">
-        <button className="action-card" onClick={startNew}>
+        <button className="action-card" onClick={onNewWorkout}>
           <span className="action-icon">🏋️</span>
           <span>Новая тренировка</span>
         </button>
@@ -78,19 +82,6 @@ export function HomeScreen({ session, onOpenWorkout, onNavigate }: Props) {
           <span>История</span>
         </button>
       </div>
-
-      {nextWorkout && (
-        <div className="next-card">
-          <div className="next-label">Ближайшая тренировка</div>
-          <div className="next-date">
-            {new Date(nextWorkout.scheduled_at).toLocaleDateString('ru-RU', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

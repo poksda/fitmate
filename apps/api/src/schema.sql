@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS workouts (
   client_id       BIGINT NOT NULL REFERENCES client_profiles(id) ON DELETE CASCADE,
   scheduled_at    TIMESTAMPTZ NOT NULL,
   completed_at    TIMESTAMPTZ,
+  name            TEXT,
   general_note    TEXT,
   trainer_summary TEXT,
   author          TEXT NOT NULL CHECK (author IN ('trainer', 'client')),
