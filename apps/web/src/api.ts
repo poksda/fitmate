@@ -44,15 +44,19 @@ export const api = {
         weight_kg: number | null;
         goals: string | null;
         telegram_id: number | null;
+        workout_count: number;
       }[];
     }>('/clients'),
 
   getClient: (id: number) => request<any>(`/clients/${id}`),
 
-  createWorkout: (clientId: number, scheduledAt: string) =>
+  getClientProgress: (id: number) =>
+    request<{ entries: any[] }>(`/clients/${id}/progress`),
+
+  createWorkout: (clientId: number, scheduledAt: string, name?: string) =>
     request<any>('/workouts', {
       method: 'POST',
-      body: JSON.stringify({ client_id: clientId, scheduled_at: scheduledAt, author: 'trainer' }),
+      body: JSON.stringify({ client_id: clientId, scheduled_at: scheduledAt, name, author: 'trainer' }),
     }),
 
   addExercise: (workoutId: number, name: string) =>
@@ -71,5 +75,11 @@ export const api = {
         technique_ok: techniqueOk,
         author: 'trainer',
       }),
+    }),
+
+  addComment: (workoutId: number, trainerSummary: string) =>
+    request<any>(`/workouts/${workoutId}/comment`, {
+      method: 'POST',
+      body: JSON.stringify({ trainer_summary: trainerSummary }),
     }),
 };

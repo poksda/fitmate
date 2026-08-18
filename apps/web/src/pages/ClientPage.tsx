@@ -23,6 +23,7 @@ type Workout = {
   id: number;
   scheduled_at: string;
   completed_at: string | null;
+  name: string | null;
   general_note: string | null;
   trainer_summary: string | null;
   author: string;
@@ -33,16 +34,39 @@ export function ClientPage() {
   const { id } = useParams();
   const [client, setClient] = useState<any>(null);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [progress, setProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Форма «новая тренировка»
+  const [newWkName, setNewWkName] = useState('');
+  const [newWkDate, setNewWkDate] = useState(
+    () => new Date().toISOString().slice(0, 10),
+  );
+
+  // Формы добавления упражнения/подхода
+  const [addingExTo, setAddingExTo] = useState<number | null>(null);
+  const [exName, setExName] = useState('');
+  const [addingSetTo, setAddingSetTo] = useState<number | null>(null);
+  const [setWeight, setSetWeight] = useState('');
+  const [setReps, setSetReps] = useState('');
+
+  // Форма комментария
+  const [commentFor, setCommentFor] = useState<number | null>(null);
+  const [commentText, setCommentText] = useState('');
+
+  const reload = async (clientId: number) => {
+    const res = await api.getClient(clientId);
+    setClient(res.client);
+    setWorkouts(res.workouts);
+    api
+      .getClientProgress(clientId)
+      .then((p) => setProgress(p.entries.filter((e) => e.weight_kg != null)))
+      .catch(() => {});
+  };
 
   useEffect(() => {
     if (!id) return;
-    api
-      .getClient(Number(id))
-      .then((res) => {
-        setClient(res.client);
-        setWorkouts(res.workouts);
-      })
+    reload(Number(id))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [id]);
@@ -52,6 +76,55 @@ export function ClientPage() {
 
   const completed = workouts.filter((w) => w.completed_at).length;
   const latestWeight = client.weight_kg;
+
+  const createWorkout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !newWkName.trim()) return;
+    const d = new Date(`${newWkDate}T09:00:00`).toISOString();
+    await api.createWorkout(Number(id), d, newWkName.trim());
+    setNewWkName('');
+    reload(Number(id));
+  };
+
+  const addExercise = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (addingExTo === null || !exName.trim()) return;
+    await api.addExercise(addingExTo, exName.trim());
+    setExName('');
+    setAddingExTo(null);
+    reload(Number(id!));
+  };
+
+  const addSet = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (addingSetTo === null) return;
+    const ex = workouts
+      .flatMap((w) => w.exercises)
+      .find((x) => x.id === addingSetTo);
+    const nextNum = (ex?.sets?.length ?? 0) + 1;
+    await api.addSet(
+      addingSetTo,
+      nextNum,
+      setWeight ? parseFloat(setWeight.replace(',', '.')) : undefined,
+      setReps ? parseInt(setReps, 10) : undefined,
+    );
+    setSetWeight('');
+    setSetReps('');
+    setAddingSetTo(null);
+    reload(Number(id!));
+  };
+
+  const saveComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (commentFor === null) return;
+    await api.addComment(commentFor, commentText.trim());
+    setCommentText('');
+    setCommentFor(null);
+    reload(Number(id!));
+  };
+
+  const chartMax = Math.max(...progress.map((p) => p.weight_kg), latestWeight ?? 0) * 1.05;
+  const chartMin = Math.min(...progress.map((p) => p.weight_kg), latestWeight ?? 0) * 0.95;
 
   return (
     <div className="wrap">
@@ -92,10 +165,58 @@ export function ClientPage() {
         </p>
       )}
 
+      {(progress.length > 0 || latestWeight) && (
+        <>
+          <div className="section-title">
+            <div className="icon">⚖️</div>
+            Прогресс веса
+          </div>
+          <div className="card">
+            <div className="chart">
+              {progress.map((p) => {
+                const h = chartMax > chartMin
+                  ? Math.max(8, ((p.weight_kg - chartMin) / (chartMax - chartMin)) * 100)
+                  : 50;
+                return (
+                  <div key={p.id} className="bar-wrap">
+                    <div className="bar" style={{ height: `${h}%` }} title={`${p.weight_kg} кг`} />
+                    <div className="bar-label">{p.weight_kg}</div>
+                  </div>
+                );
+              })}
+              {progress.length === 0 && latestWeight && (
+                <div className="bar-wrap">
+                  <div className="bar" style={{ height: '80%' }} />
+                  <div className="bar-label">{latestWeight}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
       <div className="section-title">
         <div className="icon">🏋️</div>
         Тренировки
       </div>
+
+      <form className="card add-workout-form" onSubmit={createWorkout}>
+        <div className="row">
+          <input
+            className="input"
+            placeholder="Название (Грудь и бицепс…)"
+            value={newWkName}
+            onChange={(e) => setNewWkName(e.target.value)}
+          />
+          <input
+            className="input"
+            type="date"
+            value={newWkDate}
+            onChange={(e) => setNewWkDate(e.target.value)}
+          />
+          <button className="btn" type="submit">Добавить</button>
+        </div>
+      </form>
 
       {workouts.length === 0 && (
         <div className="empty">
@@ -113,7 +234,9 @@ export function ClientPage() {
         return (
           <div key={w.id} className="card workout-card">
             <div className="head">
-              <h3>🗓 {date}</h3>
+              <h3>
+                {w.name ? `${w.name} · ` : ''}🗓 {date}
+              </h3>
               <span className={`status ${done ? 'done' : 'open'}`}>
                 {done ? 'Выполнена' : 'Запланирована'}
               </span>
@@ -161,14 +284,103 @@ export function ClientPage() {
                     </tbody>
                   </table>
                 )}
+
+                {addingSetTo === ex.id && (
+                  <form className="inline-form" onSubmit={addSet}>
+                    <input
+                      className="input"
+                      placeholder="Вес, кг"
+                      inputMode="decimal"
+                      value={setWeight}
+                      onChange={(e) => setSetWeight(e.target.value)}
+                    />
+                    <input
+                      className="input"
+                      placeholder="Повторения"
+                      inputMode="numeric"
+                      value={setReps}
+                      onChange={(e) => setSetReps(e.target.value)}
+                    />
+                    <button className="btn" type="submit">OK</button>
+                    <button
+                      className="link"
+                      type="button"
+                      onClick={() => setAddingSetTo(null)}
+                    >
+                      Отмена
+                    </button>
+                  </form>
+                )}
+                <button
+                  className="link"
+                  onClick={() =>
+                    setAddingSetTo(addingSetTo === ex.id ? null : ex.id)
+                  }
+                >
+                  {addingSetTo === ex.id ? 'Скрыть' : '+ Подход'}
+                </button>
               </div>
             ))}
+
+            {addingExTo === w.id && (
+              <form className="inline-form" onSubmit={addExercise}>
+                <input
+                  className="input"
+                  placeholder="Название упражнения"
+                  value={exName}
+                  onChange={(e) => setExName(e.target.value)}
+                />
+                <button className="btn" type="submit">OK</button>
+                <button
+                  className="link"
+                  type="button"
+                  onClick={() => setAddingExTo(null)}
+                >
+                  Отмена
+                </button>
+              </form>
+            )}
+            <button
+              className="link"
+              onClick={() => setAddingExTo(addingExTo === w.id ? null : w.id)}
+            >
+              {addingExTo === w.id ? 'Скрыть' : '+ Упражнение'}
+            </button>
 
             {w.trainer_summary && (
               <div className="summary">
                 <span className="label">Заметка тренера</span>
                 {w.trainer_summary}
               </div>
+            )}
+
+            {commentFor === w.id ? (
+              <form className="inline-form" onSubmit={saveComment}>
+                <textarea
+                  className="input"
+                  placeholder="Комментарий клиенту…"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                />
+                <button className="btn" type="submit">Сохранить</button>
+                <button
+                  className="link"
+                  type="button"
+                  onClick={() => setCommentFor(null)}
+                >
+                  Отмена
+                </button>
+              </form>
+            ) : (
+              <button
+                className="link"
+                onClick={() => {
+                  setCommentFor(w.id);
+                  setCommentText(w.trainer_summary ?? '');
+                }}
+              >
+                {w.trainer_summary ? '✏️ Изменить заметку' : '💬 Добавить заметку клиенту'}
+              </button>
             )}
           </div>
         );

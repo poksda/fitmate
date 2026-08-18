@@ -86,7 +86,9 @@ export async function trainerRoutes(app: FastifyInstance) {
     const trainerId = request.user!.id;
     const rows = await query(
       `SELECT cp.id AS client_profile_id, cp.weight_kg, cp.goals,
-              u.id AS user_id, u.name, u.telegram_id
+              u.id AS user_id, u.name, u.telegram_id,
+              (SELECT count(*) FROM workouts w
+                WHERE w.client_id = cp.id AND w.completed_at IS NOT NULL) AS workout_count
        FROM client_profiles cp
        JOIN users u ON u.id = cp.user_id
        WHERE cp.trainer_id = $1
@@ -135,6 +137,46 @@ export async function trainerRoutes(app: FastifyInstance) {
     );
 
     return { client: profile[0], workouts };
+  });
+
+  // Прогресс клиента (для графика веса)
+  app.get('/clients/:id/progress', async (request, reply) => {
+    const trainerId = request.user!.id;
+    const { id } = request.params as { id: string };
+
+    const ok = await query(
+      'SELECT id FROM client_profiles WHERE id = $1 AND trainer_id = $2',
+      [id, trainerId],
+    );
+    if (ok.length === 0) return reply.code(403).send({ error: 'Это не ваш клиент' });
+
+    const rows = await query(
+      `SELECT id, weight_kg, measurements, note, created_at
+       FROM progress_entries WHERE client_id = $1 ORDER BY created_at ASC`,
+      [id],
+    );
+    return { entries: rows };
+  });
+
+  // Комментарий тренера к тренировке (тренерский разбор)
+  app.post('/workouts/:id/comment', async (request, reply) => {
+    const trainerId = request.user!.id;
+    const { id } = request.params as { id: string };
+    const { trainer_summary } = request.body as { trainer_summary?: string };
+
+    const owned = await query(
+      `SELECT w.id FROM workouts w
+       JOIN client_profiles cp ON cp.id = w.client_id
+       WHERE w.id = $1 AND cp.trainer_id = $2`,
+      [id, trainerId],
+    );
+    if (owned.length === 0) return reply.code(403).send({ error: 'Нет доступа' });
+
+    const rows = await query(
+      `UPDATE workouts SET trainer_summary = $2 WHERE id = $1 RETURNING *`,
+      [id, trainer_summary ?? null],
+    );
+    return { workout: rows[0] };
   });
 
   // ---- Тренер тоже может записывать тренировки ----

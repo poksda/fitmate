@@ -8,6 +8,7 @@ type Client = {
   weight_kg: number | null;
   goals: string | null;
   telegram_id: number | null;
+  workout_count: number;
 };
 
 export function Dashboard() {
@@ -81,7 +82,7 @@ export function Dashboard() {
                 </div>
               )}
               <div className="stat">
-                Тренировок <strong>—</strong>
+                Тренировок <strong>{c.workout_count ?? 0}</strong>
               </div>
             </div>
             {c.goals && <p className="muted" style={{ marginTop: 10 }}>{c.goals}</p>}
