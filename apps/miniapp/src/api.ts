@@ -47,6 +47,12 @@ export const api = {
       '/me',
     ),
 
+  getPlan: () =>
+    request<{
+      plan: { day_of_week: number; workout_name: string }[];
+      today: string | null;
+    }>('/plan'),
+
   unbind: () =>
     request<{ ok: boolean }>('/unbind', { method: 'POST', body: '{}' }),
 

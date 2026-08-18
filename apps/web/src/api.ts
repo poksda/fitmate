@@ -72,7 +72,21 @@ export const api = {
   createWorkout: (clientId: number, scheduledAt: string, name?: string) =>
     request<any>('/workouts', {
       method: 'POST',
-      body: JSON.stringify({ client_id: clientId, scheduled_at: scheduledAt, name, author: 'trainer' }),
+      body: JSON.stringify({ client_id: clientId, scheduled_at: scheduledAt, name: name ?? null, author: 'trainer' }),
+    }),
+
+  getClientPlan: (id: number) =>
+    request<{ plan: { day_of_week: number; workout_name: string }[] }>(
+      `/clients/${id}/plan`,
+    ),
+
+  updateClientPlan: (
+    id: number,
+    plan: { day_of_week: number; workout_name: string }[],
+  ) =>
+    request<any>(`/clients/${id}/plan`, {
+      method: 'PUT',
+      body: JSON.stringify({ plan }),
     }),
 
   addExercise: (workoutId: number, name: string) =>

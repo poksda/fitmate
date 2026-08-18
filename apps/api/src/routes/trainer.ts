@@ -190,6 +190,56 @@ export async function trainerRoutes(app: FastifyInstance) {
     return { client: rows[0] };
   });
 
+  // План тренировок на неделю (день недели 1=Пн .. 7=Вс)
+  app.get('/clients/:id/plan', async (request, reply) => {
+    const trainerId = request.user!.id;
+    const { id } = request.params as { id: string };
+
+    const ok = await query(
+      'SELECT id FROM client_profiles WHERE id = $1 AND trainer_id = $2',
+      [id, trainerId],
+    );
+    if (ok.length === 0) return reply.code(403).send({ error: 'Это не ваш клиент' });
+
+    const rows = await query(
+      `SELECT day_of_week, workout_name
+       FROM weekly_plans WHERE client_id = $1 ORDER BY day_of_week`,
+      [id],
+    );
+    return { plan: rows };
+  });
+
+  // Сохранить план на неделю (заменяет весь план целиком)
+  app.put('/clients/:id/plan', async (request, reply) => {
+    const trainerId = request.user!.id;
+    const { id } = request.params as { id: string };
+    const body = request.body as {
+      plan?: { day_of_week: number; workout_name: string }[];
+    };
+    const plan = body.plan ?? [];
+
+    const ok = await query(
+      'SELECT id FROM client_profiles WHERE id = $1 AND trainer_id = $2',
+      [id, trainerId],
+    );
+    if (ok.length === 0) return reply.code(403).send({ error: 'Это не ваш клиент' });
+
+    const invalid = plan.find(
+      (p) => p.day_of_week < 1 || p.day_of_week > 7 || !p.workout_name?.trim(),
+    );
+    if (invalid) return reply.code(400).send({ error: 'Некорректный план' });
+
+    await query('DELETE FROM weekly_plans WHERE client_id = $1', [id]);
+    for (const p of plan) {
+      await query(
+        `INSERT INTO weekly_plans (client_id, day_of_week, workout_name)
+         VALUES ($1, $2, $3)`,
+        [id, p.day_of_week, p.workout_name.trim()],
+      );
+    }
+    return { plan };
+  });
+
   // Прогресс клиента (для графика веса)
   app.get('/clients/:id/progress', async (request, reply) => {
     const trainerId = request.user!.id;
@@ -235,9 +285,10 @@ export async function trainerRoutes(app: FastifyInstance) {
   // Создать тренировку клиенту
   app.post('/workouts', async (request, reply) => {
     const trainerId = request.user!.id;
-    const { client_id, scheduled_at } = request.body as {
+    const { client_id, scheduled_at, name } = request.body as {
       client_id: number;
       scheduled_at: string;
+      name?: string;
     };
 
     const ok = await query(
@@ -247,9 +298,9 @@ export async function trainerRoutes(app: FastifyInstance) {
     if (ok.length === 0) return reply.code(403).send({ error: 'Это не ваш клиент' });
 
     const rows = await query(
-      `INSERT INTO workouts (client_id, scheduled_at, author)
-       VALUES ($1, $2, 'trainer') RETURNING *`,
-      [client_id, scheduled_at],
+      `INSERT INTO workouts (client_id, scheduled_at, name, author)
+       VALUES ($1, $2, $3, 'trainer') RETURNING *`,
+      [client_id, scheduled_at, name ?? null],
     );
     return { workout: rows[0] };
   });

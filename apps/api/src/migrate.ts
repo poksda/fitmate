@@ -20,6 +20,19 @@ async function migrate() {
   await pool.query(
     'ALTER TABLE client_profiles ALTER COLUMN trainer_id DROP NOT NULL',
   );
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS weekly_plans (
+       id          BIGSERIAL PRIMARY KEY,
+       client_id   BIGINT NOT NULL REFERENCES client_profiles(id) ON DELETE CASCADE,
+       day_of_week INT NOT NULL CHECK (day_of_week BETWEEN 1 AND 7),
+       workout_name TEXT NOT NULL,
+       created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+       UNIQUE (client_id, day_of_week)
+     )`,
+  );
+  await pool.query(
+    'CREATE INDEX IF NOT EXISTS idx_weekly_plans_client ON weekly_plans(client_id)',
+  );
   console.log('Схема применена успешно');
   await pool.end();
 }

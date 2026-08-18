@@ -311,6 +311,32 @@ a.card:hover {
   background: #dc2626;
 }
 
+/* ---------- План на неделю ---------- */
+
+.plan-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plan-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.plan-day {
+  width: 34px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.plan-row .input {
+  flex: 1;
+}
+
 /* ---------- Управление клиентом ---------- */
 
 .manage-card {

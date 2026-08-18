@@ -447,6 +447,43 @@ body {
   margin: 24px 0 12px;
 }
 
+.week-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.week-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.week-day {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.week-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
 .actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

@@ -72,9 +72,20 @@ CREATE TABLE IF NOT EXISTS progress_entries (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- План тренировок на неделю (день недели 1=Пн .. 7=Вс -> название)
+CREATE TABLE IF NOT EXISTS weekly_plans (
+  id          BIGSERIAL PRIMARY KEY,
+  client_id   BIGINT NOT NULL REFERENCES client_profiles(id) ON DELETE CASCADE,
+  day_of_week INT NOT NULL CHECK (day_of_week BETWEEN 1 AND 7),
+  workout_name TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (client_id, day_of_week)
+);
+
 -- Индексы для частых запросов
 CREATE INDEX IF NOT EXISTS idx_client_profiles_trainer ON client_profiles(trainer_id);
 CREATE INDEX IF NOT EXISTS idx_workouts_client ON workouts(client_id);
 CREATE INDEX IF NOT EXISTS idx_exercises_workout ON exercises(workout_id);
 CREATE INDEX IF NOT EXISTS idx_sets_exercise ON sets(exercise_id);
 CREATE INDEX IF NOT EXISTS idx_progress_client ON progress_entries(client_id);
+CREATE INDEX IF NOT EXISTS idx_weekly_plans_client ON weekly_plans(client_id);

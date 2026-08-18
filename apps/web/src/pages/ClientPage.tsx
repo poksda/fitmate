@@ -58,6 +58,18 @@ export function ClientPage() {
   // Управление клиентом
   const [workoutsLeftInput, setWorkoutsLeftInput] = useState('');
 
+  // План на неделю
+  const [plan, setPlan] = useState<Record<number, string>>({});
+  const DAY_NAMES: Record<number, string> = {
+    1: 'Пн',
+    2: 'Вт',
+    3: 'Ср',
+    4: 'Чт',
+    5: 'Пт',
+    6: 'Сб',
+    7: 'Вс',
+  };
+
   const reload = async (clientId: number) => {
     const res = await api.getClient(clientId);
     setClient(res.client);
@@ -65,6 +77,16 @@ export function ClientPage() {
     api
       .getClientProgress(clientId)
       .then((p) => setProgress(p.entries.filter((e) => e.weight_kg != null)))
+      .catch(() => {});
+    api
+      .getClientPlan(clientId)
+      .then((r) => {
+        const map: Record<number, string> = {};
+        r.plan.forEach((p) => {
+          map[p.day_of_week] = p.workout_name;
+        });
+        setPlan(map);
+      })
       .catch(() => {});
   };
 
@@ -139,6 +161,14 @@ export function ClientPage() {
       workouts_left: isNaN(n) ? null : n,
     });
     setWorkoutsLeftInput('');
+    reload(Number(id!));
+  };
+
+  const savePlan = async () => {
+    const items = Object.entries(plan)
+      .map(([dow, name]) => ({ day_of_week: Number(dow), workout_name: name.trim() }))
+      .filter((p) => p.workout_name.length > 0);
+    await api.updateClientPlan(Number(id!), items);
     reload(Number(id!));
   };
 
@@ -223,6 +253,34 @@ export function ClientPage() {
           <Icon name="target" size={15} /> {client.goals}
         </p>
       )}
+
+      <div className="card manage-card">
+        <div className="section-title" style={{ margin: '0 0 12px' }}>
+          <div className="icon"><Icon name="dumbbell" size={16} /></div>
+          План на неделю
+        </div>
+        <div className="plan-grid">
+          {Object.keys(DAY_NAMES).map((dow) => (
+            <div key={dow} className="plan-row">
+              <span className="plan-day">{DAY_NAMES[Number(dow)]}</span>
+              <input
+                className="input"
+                placeholder="—"
+                value={plan[Number(dow)] ?? ''}
+                onChange={(e) =>
+                  setPlan((p) => ({ ...p, [Number(dow)]: e.target.value }))
+                }
+              />
+            </div>
+          ))}
+        </div>
+        <button className="btn" style={{ marginTop: 12 }} onClick={savePlan}>
+          Сохранить план
+        </button>
+        <span className="manage-hint" style={{ marginLeft: 10 }}>
+          Клиент увидит «Сегодня: …» в приложении по этому плану
+        </span>
+      </div>
 
       {(progress.length > 0 || latestWeight) && (
         <>

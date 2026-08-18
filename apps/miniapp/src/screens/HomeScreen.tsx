@@ -16,6 +16,8 @@ export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }:
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<'active' | 'inactive'>(session.status);
   const [workoutsLeft, setWorkoutsLeft] = useState<number | null>(session.workoutsLeft);
+  const [plan, setPlan] = useState<{ day_of_week: number; workout_name: string }[]>([]);
+  const [todayPlan, setTodayPlan] = useState<string | null>(null);
 
   useEffect(() => {
     api
@@ -34,7 +36,25 @@ export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }:
         setWorkoutsLeft(res.client.workouts_left);
       })
       .catch(() => {});
+
+    api
+      .getPlan()
+      .then((res) => {
+        setPlan(res.plan);
+        setTodayPlan(res.today);
+      })
+      .catch(() => {});
   }, [session.clientId]);
+
+  const DAY_SHORT: Record<number, string> = {
+    1: 'Пн',
+    2: 'Вт',
+    3: 'Ср',
+    4: 'Чт',
+    5: 'Пт',
+    6: 'Сб',
+    7: 'Вс',
+  };
 
   const heroDate = upcoming
     ? new Date(upcoming.scheduled_at).toLocaleDateString('ru-RU', {
@@ -110,6 +130,15 @@ export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }:
             Начать тренировку
           </button>
         </section>
+      ) : todayPlan ? (
+        <section className="hero-card">
+          <div className="hero-label"><Icon name="dumbbell" size={14} /> Сегодня по плану</div>
+          <div className="hero-title">{todayPlan}</div>
+          <div className="hero-sub">План тренера на этот день</div>
+          <button className="btn hero-btn" onClick={onNewWorkout}>
+            Начать тренировку
+          </button>
+        </section>
       ) : (
         <section className="hero-card">
           <div className="hero-label"><Icon name="check" size={14} /> Сегодня</div>
@@ -119,6 +148,20 @@ export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }:
             Создать тренировку
           </button>
         </section>
+      )}
+
+      {plan.length > 0 && (
+        <>
+          <div className="quick-title">План на неделю</div>
+          <div className="week-plan">
+            {plan.map((p) => (
+              <div key={p.day_of_week} className="week-row">
+                <span className="week-day">{DAY_SHORT[p.day_of_week]}</span>
+                <span className="week-name">{p.workout_name}</span>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       <div className="quick-title">Разделы</div>

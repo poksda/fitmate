@@ -167,6 +167,21 @@ const existing = await query<{ id: number; trainer_id: number | null }>(
     return { client: rows[0] };
   });
 
+  // План тренировок на неделю + что сегодня по плану
+  app.get('/plan', async (request, reply) => {
+    const clientId = (request.user as any)?.clientId ?? (request.user as any)?.id;
+    const rows = await query<{ day_of_week: number; workout_name: string }>(
+      `SELECT day_of_week, workout_name
+       FROM weekly_plans WHERE client_id = $1 ORDER BY day_of_week`,
+      [clientId],
+    );
+    const now = new Date();
+    // getDay(): 0=Вс..6=Сб -> приводим к 1=Пн..7=Вс
+    const todayDow = ((now.getDay() + 6) % 7) + 1;
+    const today = rows.find((r) => r.day_of_week === todayDow)?.workout_name ?? null;
+    return { plan: rows, today };
+  });
+
   // Отвязаться от тренера: клиент уходит от текущего тренера
   app.post('/unbind', async (request, reply) => {
     const clientId = (request.user as any)?.clientId ?? (request.user as any)?.id;
