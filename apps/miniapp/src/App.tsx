@@ -11,6 +11,8 @@ import { NewWorkoutScreen } from './screens/NewWorkoutScreen';
 export type Session = {
   clientId: number;
   trainerName: string;
+  status: 'active' | 'inactive';
+  workoutsLeft: number | null;
 };
 
 export type Screen = 'home' | 'workout' | 'new' | 'progress' | 'history';
@@ -30,7 +32,12 @@ export function App() {
       }
       try {
         const res = await api.tgLogin(getInitData());
-        setSession({ clientId: res.client_id, trainerName: res.trainer.name });
+        setSession({
+          clientId: res.client_id,
+          trainerName: res.trainer.name,
+          status: res.client?.status ?? 'active',
+          workoutsLeft: res.client?.workouts_left ?? null,
+        });
       } catch {
         // 428 — новый пользователь, нужен код тренера → покажем LoginScreen
       } finally {
@@ -62,7 +69,12 @@ export function App() {
       <LoginScreen
         onLogin={async (code) => {
           const res = await api.tgLogin(getInitData(), code);
-          setSession({ clientId: res.client_id, trainerName: res.trainer.name });
+          setSession({
+            clientId: res.client_id,
+            trainerName: res.trainer.name,
+            status: res.client?.status ?? 'active',
+            workoutsLeft: res.client?.workouts_left ?? null,
+          });
         }}
       />
     );

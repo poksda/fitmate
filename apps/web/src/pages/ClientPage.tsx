@@ -54,6 +54,9 @@ export function ClientPage() {
   const [commentFor, setCommentFor] = useState<number | null>(null);
   const [commentText, setCommentText] = useState('');
 
+  // Управление клиентом
+  const [workoutsLeftInput, setWorkoutsLeftInput] = useState('');
+
   const reload = async (clientId: number) => {
     const res = await api.getClient(clientId);
     setClient(res.client);
@@ -123,6 +126,21 @@ export function ClientPage() {
     reload(Number(id!));
   };
 
+  const setStatus = async (status: 'active' | 'inactive') => {
+    await api.updateClient(Number(id!), { status });
+    reload(Number(id!));
+  };
+
+  const saveWorkoutsLeft = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const n = parseInt(workoutsLeftInput, 10);
+    await api.updateClient(Number(id!), {
+      workouts_left: isNaN(n) ? null : n,
+    });
+    setWorkoutsLeftInput('');
+    reload(Number(id!));
+  };
+
   const chartMax = Math.max(...progress.map((p) => p.weight_kg), latestWeight ?? 0) * 1.05;
   const chartMin = Math.min(...progress.map((p) => p.weight_kg), latestWeight ?? 0) * 0.95;
 
@@ -153,10 +171,48 @@ export function ClientPage() {
         </div>
         <div className="profile-item">
           <div className="k">Статус</div>
-          <div className="v" style={{ fontSize: 16, color: '#34d399' }}>
-            Активен
+          <div className="v" style={{ fontSize: 16, color: client.status === 'inactive' ? '#f87171' : '#34d399' }}>
+            {client.status === 'inactive' ? 'Неактивен' : 'Активен'}
           </div>
         </div>
+      </div>
+
+      <div className="card manage-card">
+        <div className="section-title" style={{ margin: '0 0 12px' }}>
+          <div className="icon">⚙️</div>
+          Управление клиентом
+        </div>
+
+        <div className="manage-row">
+          {client.status === 'active' ? (
+            <button className="btn btn-danger" onClick={() => setStatus('inactive')}>
+              Деактивировать клиента
+            </button>
+          ) : (
+            <button className="btn" onClick={() => setStatus('active')}>
+              Активировать клиента
+            </button>
+          )}
+          <span className="manage-hint">
+            {client.status === 'inactive'
+              ? 'Клиент увидит «Тренировки приостановлены»'
+              : 'После деактивации клиент не сможет заниматься'}
+          </span>
+        </div>
+
+        <form className="manage-row" onSubmit={saveWorkoutsLeft}>
+          <input
+            className="input input-narrow"
+            placeholder={client.workouts_left?.toString() ?? '∞'}
+            inputMode="numeric"
+            value={workoutsLeftInput}
+            onChange={(e) => setWorkoutsLeftInput(e.target.value)}
+          />
+          <button className="btn" type="submit">Сохранить счётчик</button>
+          <span className="manage-hint">
+            Текущее: {client.workouts_left ?? 'не задано'} тренировок до оплаты
+          </span>
+        </form>
       </div>
 
       {client.goals && (

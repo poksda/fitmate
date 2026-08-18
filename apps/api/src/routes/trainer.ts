@@ -85,7 +85,7 @@ export async function trainerRoutes(app: FastifyInstance) {
   app.get('/clients', async (request) => {
     const trainerId = request.user!.id;
     const rows = await query(
-      `SELECT cp.id AS client_profile_id, cp.weight_kg, cp.goals,
+      `SELECT cp.id AS client_profile_id, cp.weight_kg, cp.goals, cp.status, cp.workouts_left,
               u.id AS user_id, u.name, u.telegram_id,
               (SELECT count(*) FROM workouts w
                 WHERE w.client_id = cp.id AND w.completed_at IS NOT NULL) AS workout_count
@@ -104,7 +104,7 @@ export async function trainerRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
 
     const profile = await query(
-      `SELECT cp.id AS client_profile_id, cp.weight_kg, cp.goals, u.name
+      `SELECT cp.id AS client_profile_id, cp.weight_kg, cp.goals, cp.status, cp.workouts_left, u.name
        FROM client_profiles cp
        JOIN users u ON u.id = cp.user_id
        WHERE cp.id = $1 AND cp.trainer_id = $2`,
@@ -137,6 +137,35 @@ export async function trainerRoutes(app: FastifyInstance) {
     );
 
     return { client: profile[0], workouts };
+  });
+
+  // Обновить клиента: статус (активен/деактивирован), оставшиеся тренировки
+  app.patch('/clients/:id', async (request, reply) => {
+    const trainerId = request.user!.id;
+    const { id } = request.params as { id: string };
+    const { status, workouts_left, weight_kg, goals } = request.body as {
+      status?: 'active' | 'inactive';
+      workouts_left?: number | null;
+      weight_kg?: number | null;
+      goals?: string | null;
+    };
+
+    const ok = await query(
+      'SELECT id FROM client_profiles WHERE id = $1 AND trainer_id = $2',
+      [id, trainerId],
+    );
+    if (ok.length === 0) return reply.code(403).send({ error: 'Это не ваш клиент' });
+
+    const rows = await query(
+      `UPDATE client_profiles
+       SET status = COALESCE($3, status),
+           workouts_left = CASE WHEN $4::text = '__unset__' THEN NULL ELSE COALESCE($4, workouts_left) END,
+           weight_kg = CASE WHEN $5::text = '__unset__' THEN NULL ELSE COALESCE($5, weight_kg) END,
+           goals = CASE WHEN $6::text = '__unset__' THEN NULL ELSE COALESCE($6, goals) END
+       WHERE id = $1 RETURNING *`,
+      [id, trainerId, status ?? null, workouts_left ?? '__unset__', weight_kg ?? '__unset__', goals ?? '__unset__'],
+    );
+    return { client: rows[0] };
   });
 
   // Прогресс клиента (для графика веса)

@@ -29,6 +29,7 @@ export const api = {
       token: string;
       client_id: number;
       trainer: { id: number; name: string };
+      client?: { status: 'active' | 'inactive'; workouts_left: number | null };
       new_user?: boolean;
     }>('/tg-login', {
       method: 'POST',

@@ -86,7 +86,6 @@ export async function botRoutes(app: FastifyInstance) {
        WHERE u.telegram_id = $1`,
       [telegramId],
     );
-
     let clientId: number;
     let trainerId: number;
     let newUser = false;
@@ -128,6 +127,11 @@ export async function botRoutes(app: FastifyInstance) {
       [trainerId],
     );
 
+    const clientInfo = await query<{ status: string; workouts_left: number | null }>(
+      'SELECT status, workouts_left FROM client_profiles WHERE id = $1',
+      [clientId],
+    );
+
     // Выдаём JWT клиенту — им защищены все остальные эндпоинты
     const token = app.jwt.sign({ id: clientId, role: 'client', clientId });
 
@@ -135,6 +139,7 @@ export async function botRoutes(app: FastifyInstance) {
       token,
       client_id: clientId,
       trainer: trainer[0],
+      client: clientInfo[0] ?? { status: 'active', workouts_left: null },
       new_user: newUser,
     };
   });
@@ -293,9 +298,18 @@ export async function botRoutes(app: FastifyInstance) {
        SET completed_at = now(),
            trainer_summary = COALESCE($2, trainer_summary),
            general_note = COALESCE($3, general_note)
-       WHERE id = $1 RETURNING *`,
+       WHERE id = $1 AND completed_at IS NULL RETURNING *`,
       [id, trainer_summary ?? null, general_note ?? null],
     );
+    if (rows.length > 0) {
+      // Уменьшаем счётчик оставшихся тренировок, если он задан
+      await query(
+        `UPDATE client_profiles
+         SET workouts_left = GREATEST(0, workouts_left - 1)
+         WHERE id = $1 AND workouts_left IS NOT NULL`,
+        [rows[0].client_id],
+      );
+    }
     return { workout: rows[0] };
   });
 

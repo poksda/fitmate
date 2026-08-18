@@ -139,6 +139,19 @@ a.card:hover {
 .client-card h3 {
   font-size: 16px;
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge-inactive {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--danger);
 }
 
 .stat-row {
@@ -191,6 +204,37 @@ a.card:hover {
 .btn-ghost:hover {
   background: var(--panel-2);
   color: var(--text);
+}
+
+.btn-danger {
+  background: var(--danger);
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+/* ---------- Управление клиентом ---------- */
+
+.manage-card {
+  margin-top: 16px;
+}
+
+.manage-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+}
+
+.manage-hint {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.input-narrow {
+  width: 110px;
 }
 
 .link {

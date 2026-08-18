@@ -41,6 +41,31 @@ export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }:
         <div className="avatar">{session.trainerName.charAt(0).toUpperCase()}</div>
       </header>
 
+      {session.status === 'inactive' ? (
+        <section className="status-banner inactive">
+          <div className="status-banner-title">Тренировки приостановлены</div>
+          <div className="status-banner-sub">
+            Свяжитесь с тренером, чтобы возобновить занятия.
+          </div>
+        </section>
+      ) : session.workoutsLeft !== null && session.workoutsLeft <= 3 ? (
+        <section className="status-banner warn">
+          <div className="status-banner-title">
+            Осталось {session.workoutsLeft === 0 ? '0' : session.workoutsLeft}{' '}
+            {session.workoutsLeft === 0
+              ? 'тренировок'
+              : session.workoutsLeft === 1
+                ? 'тренировка'
+                : 'тренировки'}
+          </div>
+          <div className="status-banner-sub">
+            {session.workoutsLeft === 0
+              ? 'Пора продлить абонемент у тренера.'
+              : 'Продлите абонемент, чтобы продолжить заниматься.'}
+          </div>
+        </section>
+      ) : null}
+
       {loading ? (
         <section className="hero-card">
           <div className="hero-label">Сегодня</div>

@@ -9,6 +9,8 @@ type Client = {
   goals: string | null;
   telegram_id: number | null;
   workout_count: number;
+  status: 'active' | 'inactive';
+  workouts_left: number | null;
 };
 
 export function Dashboard() {
@@ -74,7 +76,10 @@ export function Dashboard() {
             to={`/clients/${c.client_profile_id}`}
             className="card client-card"
           >
-            <h3>{c.name}</h3>
+            <h3>
+              {c.name}
+              {c.status === 'inactive' && <span className="badge-inactive">неактивен</span>}
+            </h3>
             <div className="stat-row">
               {c.weight_kg !== null && (
                 <div className="stat">
@@ -84,6 +89,11 @@ export function Dashboard() {
               <div className="stat">
                 Тренировок <strong>{c.workout_count ?? 0}</strong>
               </div>
+              {c.workouts_left !== null && (
+                <div className="stat">
+                  До оплаты <strong>{c.workouts_left}</strong>
+                </div>
+              )}
             </div>
             {c.goals && <p className="muted" style={{ marginTop: 10 }}>{c.goals}</p>}
           </Link>

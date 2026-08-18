@@ -15,12 +15,14 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Связь клиент <-> тренер
 CREATE TABLE IF NOT EXISTS client_profiles (
-  id          BIGSERIAL PRIMARY KEY,
-  user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  trainer_id  BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  weight_kg   NUMERIC(5,1),
-  goals       TEXT,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  id            BIGSERIAL PRIMARY KEY,
+  user_id       BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  trainer_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  weight_kg     NUMERIC(5,1),
+  goals         TEXT,
+  status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+  workouts_left INT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (user_id)
 );
 

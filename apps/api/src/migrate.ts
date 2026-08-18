@@ -11,6 +11,12 @@ async function migrate() {
   const sql = readFileSync(join(__dirname, 'schema.sql'), 'utf8');
   await pool.query(sql);
   await pool.query('ALTER TABLE workouts ADD COLUMN IF NOT EXISTS name TEXT');
+  await pool.query(
+    `ALTER TABLE client_profiles
+     ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active'
+     CHECK (status IN ('active', 'inactive'))`,
+  );
+  await pool.query('ALTER TABLE client_profiles ADD COLUMN IF NOT EXISTS workouts_left INT');
   console.log('Схема применена успешно');
   await pool.end();
 }

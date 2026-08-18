@@ -45,10 +45,26 @@ export const api = {
         goals: string | null;
         telegram_id: number | null;
         workout_count: number;
+        status: 'active' | 'inactive';
+        workouts_left: number | null;
       }[];
     }>('/clients'),
 
   getClient: (id: number) => request<any>(`/clients/${id}`),
+
+  updateClient: (
+    id: number,
+    body: {
+      status?: 'active' | 'inactive';
+      workouts_left?: number | null;
+      weight_kg?: number | null;
+      goals?: string | null;
+    },
+  ) =>
+    request<any>(`/clients/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
 
   getClientProgress: (id: number) =>
     request<{ entries: any[] }>(`/clients/${id}/progress`),
