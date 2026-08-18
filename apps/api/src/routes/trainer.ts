@@ -143,7 +143,7 @@ export async function trainerRoutes(app: FastifyInstance) {
   app.patch('/clients/:id', async (request, reply) => {
     const trainerId = request.user!.id;
     const { id } = request.params as { id: string };
-    const { status, workouts_left, weight_kg, goals } = request.body as {
+    const body = request.body as {
       status?: 'active' | 'inactive';
       workouts_left?: number | null;
       weight_kg?: number | null;
@@ -156,14 +156,36 @@ export async function trainerRoutes(app: FastifyInstance) {
     );
     if (ok.length === 0) return reply.code(403).send({ error: 'Это не ваш клиент' });
 
+    const sets: string[] = [];
+    const values: unknown[] = [id, trainerId];
+    let p = 3;
+    if (body.status !== undefined) {
+      sets.push(`status = $${p}`);
+      values.push(body.status);
+      p++;
+    }
+    if (body.workouts_left !== undefined) {
+      sets.push(`workouts_left = $${p}`);
+      values.push(body.workouts_left);
+      p++;
+    }
+    if (body.weight_kg !== undefined) {
+      sets.push(`weight_kg = $${p}`);
+      values.push(body.weight_kg);
+      p++;
+    }
+    if (body.goals !== undefined) {
+      sets.push(`goals = $${p}`);
+      values.push(body.goals);
+      p++;
+    }
+    if (sets.length === 0) {
+      return reply.code(400).send({ error: 'Нет полей для обновления' });
+    }
+
     const rows = await query(
-      `UPDATE client_profiles
-       SET status = COALESCE($3, status),
-           workouts_left = CASE WHEN $4::text = '__unset__' THEN NULL ELSE COALESCE($4, workouts_left) END,
-           weight_kg = CASE WHEN $5::text = '__unset__' THEN NULL ELSE COALESCE($5, weight_kg) END,
-           goals = CASE WHEN $6::text = '__unset__' THEN NULL ELSE COALESCE($6, goals) END
-       WHERE id = $1 RETURNING *`,
-      [id, trainerId, status ?? null, workouts_left ?? '__unset__', weight_kg ?? '__unset__', goals ?? '__unset__'],
+      `UPDATE client_profiles SET ${sets.join(', ')} WHERE id = $1 AND trainer_id = $2 RETURNING *`,
+      values,
     );
     return { client: rows[0] };
   });
