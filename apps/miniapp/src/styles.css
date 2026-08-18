@@ -302,6 +302,11 @@ body {
   border-color: rgba(251, 191, 36, 0.35);
 }
 
+.status-banner.ok {
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.25);
+}
+
 .status-banner-title {
   font-size: 15px;
   font-weight: 700;
@@ -314,6 +319,10 @@ body {
 
 .status-banner.warn .status-banner-title {
   color: var(--warn);
+}
+
+.status-banner.ok .status-banner-title {
+  color: var(--success);
 }
 
 .status-banner-sub {

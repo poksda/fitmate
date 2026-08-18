@@ -58,20 +58,19 @@ export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }:
             Свяжитесь с тренером, чтобы возобновить занятия.
           </div>
         </section>
-      ) : workoutsLeft !== null && workoutsLeft <= 3 ? (
-        <section className="status-banner warn">
+      ) : workoutsLeft !== null ? (
+        <section
+          className={`status-banner ${workoutsLeft <= 3 ? 'warn' : 'ok'}`}
+        >
           <div className="status-banner-title">
-            Осталось {workoutsLeft === 0 ? '0' : workoutsLeft}{' '}
-            {workoutsLeft === 0
-              ? 'тренировок'
-              : workoutsLeft === 1
-                ? 'тренировка'
-                : 'тренировки'}
+            Осталось {workoutsLeft} {workoutsLeft === 0 ? 'тренировок' : workoutsLeft === 1 ? 'тренировка' : workoutsLeft < 5 ? 'тренировки' : 'тренировок'}
           </div>
           <div className="status-banner-sub">
             {workoutsLeft === 0
               ? 'Пора продлить абонемент у тренера.'
-              : 'Продлите абонемент, чтобы продолжить заниматься.'}
+              : workoutsLeft <= 3
+                ? 'Продлите абонемент, чтобы продолжить заниматься.'
+                : 'Количество тренировок по абонементу.'}
           </div>
         </section>
       ) : null}
