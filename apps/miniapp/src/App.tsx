@@ -94,6 +94,7 @@ export function App() {
           session={session}
           onOpenWorkout={openWorkout}
           onNewWorkout={() => setScreen('new')}
+          onStartPlanWorkout={createWorkout}
           onNavigate={setScreen}
         />
       )}

@@ -7,10 +7,17 @@ type Props = {
   session: Session;
   onOpenWorkout: (id: number) => void;
   onNewWorkout: () => void;
+  onStartPlanWorkout: (name: string) => void;
   onNavigate: (s: Screen) => void;
 };
 
-export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }: Props) {
+export function HomeScreen({
+  session,
+  onOpenWorkout,
+  onNewWorkout,
+  onStartPlanWorkout,
+  onNavigate,
+}: Props) {
   const [upcoming, setUpcoming] = useState<any>(null);
   const [completedCount, setCompletedCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -45,6 +52,14 @@ export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }:
       })
       .catch(() => {});
   }, [session.clientId]);
+
+  // Незавершённая тренировка, созданная сегодня (клиент уже начал)
+  const startedToday =
+    upcoming &&
+    !upcoming.completed_at &&
+    new Date(upcoming.scheduled_at).toDateString() === new Date().toDateString()
+      ? upcoming
+      : null;
 
   const DAY_SHORT: Record<number, string> = {
     1: 'Пн',
@@ -117,26 +132,39 @@ export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }:
           <div className="hero-label">Сегодня</div>
           <div className="hero-title">Загрузка…</div>
         </section>
-      ) : upcoming ? (
-        <section className="hero-card">
-          <div className="hero-label"><Icon name="dumbbell" size={14} /> {heroDate}</div>
-          <div className="hero-title">{upcoming.name || 'Тренировка'}</div>
-          <div className="hero-sub">
-            {upcoming.exercises?.length
-              ? `${upcoming.exercises.length} упражнений`
-              : 'Добавь упражнения и начни'}
-          </div>
-          <button className="btn hero-btn" onClick={() => onOpenWorkout(upcoming.id)}>
-            Начать тренировку
-          </button>
-        </section>
       ) : todayPlan ? (
         <section className="hero-card">
           <div className="hero-label"><Icon name="dumbbell" size={14} /> Сегодня по плану</div>
           <div className="hero-title">{todayPlan}</div>
           <div className="hero-sub">План тренера на этот день</div>
-          <button className="btn hero-btn" onClick={onNewWorkout}>
+          <button className="btn hero-btn" onClick={() => onStartPlanWorkout(todayPlan)}>
             Начать тренировку
+          </button>
+        </section>
+      ) : startedToday ? (
+        <section className="hero-card">
+          <div className="hero-label"><Icon name="dumbbell" size={14} /> Сегодня</div>
+          <div className="hero-title">{startedToday.name || 'Тренировка'}</div>
+          <div className="hero-sub">
+            {startedToday.exercises?.length
+              ? `${startedToday.exercises.length} упражнений`
+              : 'Добавь упражнения и начни'}
+          </div>
+          <button className="btn hero-btn" onClick={() => onOpenWorkout(startedToday.id)}>
+            Продолжить тренировку
+          </button>
+        </section>
+      ) : upcoming ? (
+        <section className="hero-card">
+          <div className="hero-label"><Icon name="history" size={14} /> {heroDate}</div>
+          <div className="hero-title">{upcoming.name || 'Тренировка'}</div>
+          <div className="hero-sub">
+            {upcoming.exercises?.length
+              ? `${upcoming.exercises.length} упражнений`
+              : 'Открыта ранее — добавь упражнения'}
+          </div>
+          <button className="btn hero-btn" onClick={() => onOpenWorkout(upcoming.id)}>
+            Продолжить тренировку
           </button>
         </section>
       ) : (
