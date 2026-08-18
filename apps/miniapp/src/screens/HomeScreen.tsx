@@ -12,6 +12,8 @@ type Props = {
 export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }: Props) {
   const [upcoming, setUpcoming] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<'active' | 'inactive'>(session.status);
+  const [workoutsLeft, setWorkoutsLeft] = useState<number | null>(session.workoutsLeft);
 
   useEffect(() => {
     api
@@ -21,6 +23,14 @@ export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }:
         setUpcoming(open ?? null);
       })
       .finally(() => setLoading(false));
+
+    api
+      .getMe()
+      .then((res) => {
+        setStatus(res.client.status);
+        setWorkoutsLeft(res.client.workouts_left);
+      })
+      .catch(() => {});
   }, [session.clientId]);
 
   const heroDate = upcoming
@@ -41,25 +51,25 @@ export function HomeScreen({ session, onOpenWorkout, onNewWorkout, onNavigate }:
         <div className="avatar">{session.trainerName.charAt(0).toUpperCase()}</div>
       </header>
 
-      {session.status === 'inactive' ? (
+      {status === 'inactive' ? (
         <section className="status-banner inactive">
           <div className="status-banner-title">Тренировки приостановлены</div>
           <div className="status-banner-sub">
             Свяжитесь с тренером, чтобы возобновить занятия.
           </div>
         </section>
-      ) : session.workoutsLeft !== null && session.workoutsLeft <= 3 ? (
+      ) : workoutsLeft !== null && workoutsLeft <= 3 ? (
         <section className="status-banner warn">
           <div className="status-banner-title">
-            Осталось {session.workoutsLeft === 0 ? '0' : session.workoutsLeft}{' '}
-            {session.workoutsLeft === 0
+            Осталось {workoutsLeft === 0 ? '0' : workoutsLeft}{' '}
+            {workoutsLeft === 0
               ? 'тренировок'
-              : session.workoutsLeft === 1
+              : workoutsLeft === 1
                 ? 'тренировка'
                 : 'тренировки'}
           </div>
           <div className="status-banner-sub">
-            {session.workoutsLeft === 0
+            {workoutsLeft === 0
               ? 'Пора продлить абонемент у тренера.'
               : 'Продлите абонемент, чтобы продолжить заниматься.'}
           </div>

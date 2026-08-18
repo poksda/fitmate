@@ -147,6 +147,17 @@ export async function botRoutes(app: FastifyInstance) {
   // Все остальные маршруты бота — под защитой (x-bot-key или JWT)
   app.addHook('preHandler', auth);
 
+  // Статус клиента: актуальный статус и счётчик оставшихся тренировок
+  app.get('/me', async (request, reply) => {
+    const clientId = (request.user as any)?.clientId ?? (request.user as any)?.id;
+    const rows = await query(
+      `SELECT status, workouts_left FROM client_profiles WHERE id = $1`,
+      [clientId],
+    );
+    if (rows.length === 0) return reply.code(404).send({ error: 'Клиент не найден' });
+    return { client: rows[0] };
+  });
+
   // Вход/регистрация клиента по telegram_id (устаревший, для совместимости)
   app.post('/login', async (request, reply) => {
     const { telegram_id, name, trainer_code } = request.body as {

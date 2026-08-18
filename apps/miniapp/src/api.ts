@@ -42,6 +42,11 @@ export const api = {
   getWorkouts: (clientId: number) =>
     request<{ workouts: any[] }>(`/workouts?client_id=${clientId}`),
 
+  getMe: () =>
+    request<{ client: { status: 'active' | 'inactive'; workouts_left: number | null } }>(
+      '/me',
+    ),
+
   getProgress: (clientId: number) =>
     request<{ entries: any[] }>(`/progress?client_id=${clientId}`),
 
