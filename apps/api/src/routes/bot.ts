@@ -425,8 +425,9 @@ const existing = await query<{ id: number; trainer_id: number | null }>(
     if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
 
     const limitDays = Number(days) || 7;
+    const isDateOnly = (s?: string) => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
     const fromIso = from ?? new Date(Date.now() - limitDays * 24 * 60 * 60 * 1000).toISOString();
-    const toIso = to ?? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const toIso = to ? (isDateOnly(to) ? `${to}T23:59:59.999Z` : to) : new Date().toISOString();
 
     const rows = await query(
       `SELECT id, food_text, calories, protein, fats, carbs, source, eaten_at
@@ -482,7 +483,12 @@ const existing = await query<{ id: number; trainer_id: number | null }>(
 
   // Цели клиента + последний вес (для прогресса к цели)
   app.get('/goals', async (request, reply) => {
-    const clientId = (request.user as any)?.clientId ?? (request.user as any)?.id;
+    const clientId =
+      (request.user as any)?.clientId ??
+      (request.user as any)?.id ??
+      Number((request.query as { client_id?: string }).client_id);
+    if (!clientId) return reply.code(400).send({ error: 'client_id обязателен' });
+
     const rows = await query(
       `SELECT goal_weight, goal_calories, goal_protein, goal_fats, goal_carbs
        FROM client_profiles WHERE id = $1`,
