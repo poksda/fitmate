@@ -414,25 +414,90 @@ const existing = await query<{ id: number; trainer_id: number | null }>(
     return { entry: rows[0] };
   });
 
-  // Список записей питания (с фильтром по дням: days = 1 | 7)
+  // Список записей питания (с фильтром по дням: days = 1 | 7 | 30, либо from/to)
   app.get('/nutrition', async (request, reply) => {
-    const { client_id, days } = request.query as {
+    const { client_id, days, from, to } = request.query as {
       client_id: string;
       days?: string;
+      from?: string;
+      to?: string;
     };
     if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
 
     const limitDays = Number(days) || 7;
-    const from = new Date(Date.now() - limitDays * 24 * 60 * 60 * 1000).toISOString();
+    const fromIso = from ?? new Date(Date.now() - limitDays * 24 * 60 * 60 * 1000).toISOString();
+    const toIso = to ?? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
     const rows = await query(
       `SELECT id, food_text, calories, protein, fats, carbs, source, eaten_at
        FROM nutrition_entries
-       WHERE client_id = $1 AND eaten_at >= $2
+       WHERE client_id = $1 AND eaten_at >= $2 AND eaten_at <= $3
        ORDER BY eaten_at DESC`,
-      [client_id, from],
+      [client_id, fromIso, toIso],
     );
     return { entries: rows };
+  });
+
+  // Редактировать запись питания
+  app.patch('/nutrition/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { client_id, food_text, calories, protein, fats, carbs } = request.body as {
+      client_id: number;
+      food_text?: string;
+      calories?: number;
+      protein?: number;
+      fats?: number;
+      carbs?: number;
+    };
+    if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
+
+    const rows = await query(
+      `UPDATE nutrition_entries
+       SET food_text = COALESCE($3, food_text),
+           calories = COALESCE($4, calories),
+           protein = COALESCE($5, protein),
+           fats = COALESCE($6, fats),
+           carbs = COALESCE($7, carbs),
+           source = 'manual'
+       WHERE id = $1 AND client_id = $2 RETURNING *`,
+      [id, client_id, food_text ?? null, calories ?? null, protein ?? null, fats ?? null, carbs ?? null],
+    );
+    if (rows.length === 0) return reply.code(404).send({ error: 'Запись не найдена' });
+    return { entry: rows[0] };
+  });
+
+  // Удалить запись питания
+  app.delete('/nutrition/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { client_id } = request.body as { client_id?: number };
+    if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
+
+    const rows = await query(
+      `DELETE FROM nutrition_entries WHERE id = $1 AND client_id = $2 RETURNING id`,
+      [id, client_id],
+    );
+    if (rows.length === 0) return reply.code(404).send({ error: 'Запись не найдена' });
+    return { ok: true };
+  });
+
+  // Цели клиента + последний вес (для прогресса к цели)
+  app.get('/goals', async (request, reply) => {
+    const clientId = (request.user as any)?.clientId ?? (request.user as any)?.id;
+    const rows = await query(
+      `SELECT goal_weight, goal_calories, goal_protein, goal_fats, goal_carbs
+       FROM client_profiles WHERE id = $1`,
+      [clientId],
+    );
+    const weight = await query(
+      `SELECT weight_kg FROM progress_entries
+       WHERE client_id = $1 AND weight_kg IS NOT NULL
+       ORDER BY created_at DESC LIMIT 1`,
+      [clientId],
+    );
+    return {
+      goals: rows[0] ?? null,
+      latest_weight: weight[0]?.weight_kg ?? null,
+    };
   });
 
   // Сводка за период: суммы и среднее по дням
@@ -487,5 +552,29 @@ const existing = await query<{ id: number; trainer_id: number | null }>(
     const { analyzeNutrition } = await import('../ai.js');
     const analysis = await analyzeNutrition(rows);
     return { analysis };
+  });
+
+  // ---- Уведомления: бот забирает очередь и отправляет в Telegram ----
+
+  // Очередь неотправленных уведомлений (только для бота по x-bot-key или JWT)
+  app.get('/notifications/pending', async (request) => {
+    const rows = await query(
+      `SELECT id, telegram_id, text
+       FROM notifications
+       WHERE sent_at IS NULL AND telegram_id IS NOT NULL
+       ORDER BY created_at ASC
+       LIMIT 50`,
+    );
+    return { notifications: rows };
+  });
+
+  // Отметить уведомление как отправленное
+  app.post('/notifications/:id/sent', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const rows = await query(
+      `UPDATE notifications SET sent_at = now() WHERE id = $1 AND sent_at IS NULL RETURNING id`,
+      [id],
+    );
+    return { ok: rows.length > 0 };
   });
 }

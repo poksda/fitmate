@@ -75,6 +75,15 @@ export function ClientPage() {
   const [nutritionAnalysis, setNutritionAnalysis] = useState<string | null>(null);
   const [nutritionLoading, setNutritionLoading] = useState(false);
 
+  // Цели клиента
+  const [goals, setGoals] = useState({
+    goal_weight: '',
+    goal_calories: '',
+    goal_protein: '',
+    goal_fats: '',
+    goal_carbs: '',
+  });
+
   const reload = async (clientId: number) => {
     const res = await api.getClient(clientId);
     setClient(res.client);
@@ -96,6 +105,19 @@ export function ClientPage() {
     api
       .getClientNutrition(clientId)
       .then((r) => setNutrition(r.entries))
+      .catch(() => {});
+    api
+      .getClientGoals(clientId)
+      .then((r) => {
+        const g = r.goals ?? {};
+        setGoals({
+          goal_weight: g.goal_weight != null ? String(g.goal_weight) : '',
+          goal_calories: g.goal_calories != null ? String(g.goal_calories) : '',
+          goal_protein: g.goal_protein != null ? String(g.goal_protein) : '',
+          goal_fats: g.goal_fats != null ? String(g.goal_fats) : '',
+          goal_carbs: g.goal_carbs != null ? String(g.goal_carbs) : '',
+        });
+      })
       .catch(() => {});
   };
 
@@ -193,6 +215,27 @@ export function ClientPage() {
     }
   };
 
+  const saveGoals = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id) return;
+    const num = (v: string) => (v.trim() === '' ? null : parseFloat(v.replace(',', '.')));
+    const int = (v: string) => (v.trim() === '' ? null : Math.round(parseFloat(v)));
+    await api.updateClientGoals(Number(id), {
+      goal_weight: num(goals.goal_weight),
+      goal_calories: int(goals.goal_calories),
+      goal_protein: int(goals.goal_protein),
+      goal_fats: int(goals.goal_fats),
+      goal_carbs: int(goals.goal_carbs),
+    });
+    reload(Number(id));
+  };
+
+  const deleteNutrition = async (entryId: number) => {
+    if (!confirm('Удалить запись питания?')) return;
+    await api.deleteClientNutrition(Number(id!), entryId);
+    reload(Number(id!));
+  };
+
   const chartMax = Math.max(...progress.map((p) => p.weight_kg), latestWeight ?? 0) * 1.05;
   const chartMin = Math.min(...progress.map((p) => p.weight_kg), latestWeight ?? 0) * 0.95;
 
@@ -265,6 +308,61 @@ export function ClientPage() {
           <button className="btn" type="submit">Сохранить счётчик</button>
           <span className="manage-hint">
             Текущее: {client.workouts_left ?? 'не задано'} тренировок до оплаты
+          </span>
+        </form>
+      </div>
+
+      <div className="card manage-card">
+        <div className="section-title" style={{ margin: '0 0 12px' }}>
+          <div className="icon"><Icon name="target" size={16} /></div>
+          Цели клиента
+        </div>
+        <form className="goal-form" onSubmit={saveGoals}>
+          <div className="row">
+            <label>Вес, кг</label>
+            <input
+              className="input"
+              inputMode="decimal"
+              placeholder="—"
+              value={goals.goal_weight}
+              onChange={(e) => setGoals({ ...goals, goal_weight: e.target.value })}
+            />
+            <label>Ккал/день</label>
+            <input
+              className="input"
+              inputMode="numeric"
+              placeholder="—"
+              value={goals.goal_calories}
+              onChange={(e) => setGoals({ ...goals, goal_calories: e.target.value })}
+            />
+            <label>Белки, г</label>
+            <input
+              className="input"
+              inputMode="numeric"
+              placeholder="—"
+              value={goals.goal_protein}
+              onChange={(e) => setGoals({ ...goals, goal_protein: e.target.value })}
+            />
+            <label>Жиры, г</label>
+            <input
+              className="input"
+              inputMode="numeric"
+              placeholder="—"
+              value={goals.goal_fats}
+              onChange={(e) => setGoals({ ...goals, goal_fats: e.target.value })}
+            />
+            <label>Углеводы, г</label>
+            <input
+              className="input"
+              inputMode="numeric"
+              placeholder="—"
+              value={goals.goal_carbs}
+              onChange={(e) => setGoals({ ...goals, goal_carbs: e.target.value })}
+            />
+          </div>
+          <button className="btn" type="submit">Сохранить цели</button>
+          <span className="manage-hint" style={{ marginLeft: 10 }}>
+            Клиент увидит цели и прогресс в разделе «Питание»
           </span>
         </form>
       </div>
@@ -351,6 +449,7 @@ export function ClientPage() {
                   <th>Ж</th>
                   <th>У</th>
                   <th>Когда</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -366,6 +465,15 @@ export function ClientPage() {
                         day: 'numeric',
                         month: 'short',
                       })}
+                    </td>
+                    <td>
+                      <button
+                        className="link danger-link"
+                        onClick={() => deleteNutrition(e.id)}
+                        title="Удалить запись"
+                      >
+                        <Icon name="trash" size={15} />
+                      </button>
                     </td>
                   </tr>
                 ))}

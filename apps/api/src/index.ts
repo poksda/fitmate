@@ -4,6 +4,7 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import { trainerRoutes } from './routes/trainer.js';
 import { botRoutes } from './routes/bot.js';
+import { startReminderScheduler } from './notifications.js';
 
 const app = Fastify({ logger: true });
 
@@ -22,3 +23,5 @@ try {
   app.log.error(err);
   process.exit(1);
 }
+
+startReminderScheduler();

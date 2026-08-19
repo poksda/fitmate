@@ -118,4 +118,33 @@ export const api = {
 
   getClientNutritionAnalysis: (id: number) =>
     request<{ analysis: string }>(`/clients/${id}/nutrition/analysis`),
+
+  deleteClientNutrition: (id: number, entryId: number) =>
+    request<{ ok: boolean }>(`/clients/${id}/nutrition/${entryId}`, { method: 'DELETE' }),
+
+  getClientGoals: (id: number) =>
+    request<{
+      goals: {
+        goal_weight: number | null;
+        goal_calories: number | null;
+        goal_protein: number | null;
+        goal_fats: number | null;
+        goal_carbs: number | null;
+      };
+    }>(`/clients/${id}/goals`),
+
+  updateClientGoals: (
+    id: number,
+    goals: {
+      goal_weight?: number | null;
+      goal_calories?: number | null;
+      goal_protein?: number | null;
+      goal_fats?: number | null;
+      goal_carbs?: number | null;
+    },
+  ) =>
+    request<any>(`/clients/${id}/goals`, {
+      method: 'PUT',
+      body: JSON.stringify(goals),
+    }),
 };

@@ -20,6 +20,11 @@ async function migrate() {
   await pool.query(
     'ALTER TABLE client_profiles ALTER COLUMN trainer_id DROP NOT NULL',
   );
+  await pool.query('ALTER TABLE client_profiles ADD COLUMN IF NOT EXISTS goal_weight NUMERIC(5,1)');
+  await pool.query('ALTER TABLE client_profiles ADD COLUMN IF NOT EXISTS goal_calories INT');
+  await pool.query('ALTER TABLE client_profiles ADD COLUMN IF NOT EXISTS goal_protein INT');
+  await pool.query('ALTER TABLE client_profiles ADD COLUMN IF NOT EXISTS goal_fats INT');
+  await pool.query('ALTER TABLE client_profiles ADD COLUMN IF NOT EXISTS goal_carbs INT');
   await pool.query(
     `CREATE TABLE IF NOT EXISTS weekly_plans (
        id          BIGSERIAL PRIMARY KEY,
@@ -52,6 +57,23 @@ async function migrate() {
   );
   await pool.query(
     'CREATE INDEX IF NOT EXISTS idx_nutrition_eaten_at ON nutrition_entries(eaten_at)',
+  );
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS notifications (
+       id                BIGSERIAL PRIMARY KEY,
+       client_profile_id BIGINT NOT NULL REFERENCES client_profiles(id) ON DELETE CASCADE,
+       telegram_id       BIGINT,
+       text              TEXT NOT NULL,
+       type              TEXT NOT NULL DEFAULT 'info',
+       sent_at           TIMESTAMPTZ,
+       created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+     )`,
+  );
+  await pool.query(
+    'CREATE INDEX IF NOT EXISTS idx_notifications_unsent ON notifications(sent_at) WHERE sent_at IS NULL',
+  );
+  await pool.query(
+    'CREATE INDEX IF NOT EXISTS idx_notifications_client ON notifications(client_profile_id)',
   );
   console.log('Схема применена успешно');
   await pool.end();

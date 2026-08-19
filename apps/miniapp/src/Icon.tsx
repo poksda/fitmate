@@ -129,6 +129,12 @@ export function Icon({ name, size = 20, className }: Props) {
           <path d="M4 3v7a2 2 0 0 0 2 2v9M9 3v7a2 2 0 0 1-2 2M4 3h5M4 12h5M16 3c-1 3 2 4 2 7 0 1.5-1 2-1 2v9M17 3c1 3-2 4-2 7" />
         </svg>
       );
+    case 'trash':
+      return (
+        <svg {...common} className={className}>
+          <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" />
+        </svg>
+      );
     default:
       return null;
   }

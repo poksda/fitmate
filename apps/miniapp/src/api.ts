@@ -122,9 +122,37 @@ export const api = {
   getNutrition: (clientId: number, days = 7) =>
     request<{ entries: any[] }>(`/nutrition?client_id=${clientId}&days=${days}`),
 
+  updateNutrition: (
+    entryId: number,
+    clientId: number,
+    patch: { food_text?: string; calories?: number; protein?: number; fats?: number; carbs?: number },
+  ) =>
+    request<{ entry: any }>(`/nutrition/${entryId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ client_id: clientId, ...patch }),
+    }),
+
+  deleteNutrition: (entryId: number, clientId: number) =>
+    request<{ ok: boolean }>(`/nutrition/${entryId}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ client_id: clientId }),
+    }),
+
   getNutritionSummary: (clientId: number, days = 7) =>
     request<{ days: any[] }>(`/nutrition/summary?client_id=${clientId}&days=${days}`),
 
   getNutritionAnalysis: (clientId: number, days = 7) =>
     request<{ analysis: string }>(`/nutrition/analysis?client_id=${clientId}&days=${days}`),
+
+  getGoals: () =>
+    request<{
+      goals: {
+        goal_weight: number | null;
+        goal_calories: number | null;
+        goal_protein: number | null;
+        goal_fats: number | null;
+        goal_carbs: number | null;
+      } | null;
+      latest_weight: number | null;
+    }>('/goals'),
 };

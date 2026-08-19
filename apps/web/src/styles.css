@@ -373,6 +373,25 @@ a.card:hover {
   text-decoration: underline;
 }
 
+.danger-link {
+  color: var(--danger, #f87171);
+}
+
+.goal-form .row {
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.goal-form .row label {
+  font-size: 12px;
+  color: var(--text-muted);
+  align-self: center;
+}
+
+.goal-form .row .input {
+  max-width: 120px;
+}
+
 /* ---------- Вход ---------- */
 
 .auth-wrap {

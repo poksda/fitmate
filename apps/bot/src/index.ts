@@ -1,6 +1,7 @@
 import { Bot, InlineKeyboard, webhookCallback } from 'grammy';
 import { createServer } from 'node:http';
 import { config } from './config.js';
+import { startNotificationPoller } from './notifications.js';
 
 const bot = new Bot(config.botToken);
 
@@ -67,8 +68,10 @@ if (webhookBase) {
   server.listen(Number(process.env.PORT ?? 8080), async () => {
     await bot.api.setWebhook(webhookUrl);
     console.log(`FitMate бот запущен (webhook: ${webhookUrl})`);
+    startNotificationPoller(bot);
   });
 } else {
   bot.start();
   console.log('FitMate бот запущен (long polling)');
+  startNotificationPoller(bot);
 }

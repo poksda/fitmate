@@ -870,3 +870,124 @@ body {
   letter-spacing: 0.06em;
   margin-bottom: 8px;
 }
+
+/* Цели клиента */
+.goals-card {
+  margin-bottom: 14px;
+}
+
+.goal-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.goal-line span {
+  color: var(--text-muted);
+}
+
+.goal-line b {
+  color: var(--accent);
+}
+
+.goal-sub {
+  font-size: 12px;
+}
+
+/* Полосы прогресса к целям */
+.goal-progress {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gbar-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 64px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.gbar-label {
+  color: var(--text-muted);
+}
+
+.gbar-track {
+  height: 8px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.gbar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #4ade80);
+  border-radius: 6px;
+}
+
+.gbar-val {
+  text-align: right;
+  color: var(--text-soft);
+}
+
+/* Фильтр периода */
+.period-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.period-tab {
+  flex: 1;
+  padding: 8px 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.period-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+/* Редактирование записи */
+.entry-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.icon-btn.sm {
+  width: 28px;
+  height: 28px;
+}
+
+.icon-btn.danger {
+  color: #f87171;
+}
+
+.edit-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+}

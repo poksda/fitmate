@@ -23,6 +23,10 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: PLAN_REMINDER_HOUR
+        value: "6"
+      - key: NUTRITION_REMINDER_HOUR
+        value: "18"
 
   # --- Веб-панель тренера ---
   - type: web
@@ -59,5 +63,7 @@ services:
         sync: false
       - key: BOT_API_KEY
         sync: false
+      - key: BOT_API_URL
+        value: https://fitmate-api-6ako.onrender.com/api/bot
       - key: MINIAPP_URL
         value: https://fitmate-miniapp.onrender.com

@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import bcrypt from 'bcryptjs';
 import { query } from '../db.js';
+import { notifyClient } from '../notifications.js';
 
 type RegisterBody = {
   name: string;
@@ -259,6 +260,64 @@ export async function trainerRoutes(app: FastifyInstance) {
     return { entries: rows };
   });
 
+  // Цели клиента
+  app.get('/clients/:id/goals', async (request, reply) => {
+    const trainerId = request.user!.id;
+    const { id } = request.params as { id: string };
+
+    const ok = await query(
+      `SELECT goal_weight, goal_calories, goal_protein, goal_fats, goal_carbs
+       FROM client_profiles WHERE id = $1 AND trainer_id = $2`,
+      [id, trainerId],
+    );
+    if (ok.length === 0) return reply.code(403).send({ error: 'Это не ваш клиент' });
+    return { goals: ok[0] };
+  });
+
+  // Сохранить цели клиента
+  app.put('/clients/:id/goals', async (request, reply) => {
+    const trainerId = request.user!.id;
+    const { id } = request.params as { id: string };
+    const body = request.body as {
+      goal_weight?: number | null;
+      goal_calories?: number | null;
+      goal_protein?: number | null;
+      goal_fats?: number | null;
+      goal_carbs?: number | null;
+    };
+
+    const ok = await query(
+      'SELECT id FROM client_profiles WHERE id = $1 AND trainer_id = $2',
+      [id, trainerId],
+    );
+    if (ok.length === 0) return reply.code(403).send({ error: 'Это не ваш клиент' });
+
+    const sets: string[] = [];
+    const values: unknown[] = [id, trainerId];
+    let p = 3;
+    const fields: (keyof typeof body)[] = [
+      'goal_weight',
+      'goal_calories',
+      'goal_protein',
+      'goal_fats',
+      'goal_carbs',
+    ];
+    for (const f of fields) {
+      if (body[f] !== undefined) {
+        sets.push(`${f} = $${p}`);
+        values.push(body[f] === null ? null : body[f]);
+        p++;
+      }
+    }
+    if (sets.length === 0) return reply.code(400).send({ error: 'Нет полей для обновления' });
+
+    const rows = await query(
+      `UPDATE client_profiles SET ${sets.join(', ')} WHERE id = $1 AND trainer_id = $2 RETURNING *`,
+      values,
+    );
+    return { client: rows[0] };
+  });
+
   // Дневник питания клиента
   app.get('/clients/:id/nutrition', async (request, reply) => {
     const trainerId = request.user!.id;
@@ -277,6 +336,25 @@ export async function trainerRoutes(app: FastifyInstance) {
       [id],
     );
     return { entries: rows };
+  });
+
+  // Удалить запись питания клиента
+  app.delete('/clients/:id/nutrition/:entryId', async (request, reply) => {
+    const trainerId = request.user!.id;
+    const { id, entryId } = request.params as { id: string; entryId: string };
+
+    const ok = await query(
+      'SELECT id FROM client_profiles WHERE id = $1 AND trainer_id = $2',
+      [id, trainerId],
+    );
+    if (ok.length === 0) return reply.code(403).send({ error: 'Это не ваш клиент' });
+
+    const rows = await query(
+      `DELETE FROM nutrition_entries WHERE id = $1 AND client_id = $2 RETURNING id`,
+      [entryId, id],
+    );
+    if (rows.length === 0) return reply.code(404).send({ error: 'Запись не найдена' });
+    return { ok: true };
   });
 
   // ИИ-анализ питания клиента
@@ -309,7 +387,7 @@ export async function trainerRoutes(app: FastifyInstance) {
     const { trainer_summary } = request.body as { trainer_summary?: string };
 
     const owned = await query(
-      `SELECT w.id FROM workouts w
+      `SELECT w.id, w.name, w.client_id FROM workouts w
        JOIN client_profiles cp ON cp.id = w.client_id
        WHERE w.id = $1 AND cp.trainer_id = $2`,
       [id, trainerId],
@@ -320,6 +398,15 @@ export async function trainerRoutes(app: FastifyInstance) {
       `UPDATE workouts SET trainer_summary = $2 WHERE id = $1 RETURNING *`,
       [id, trainer_summary ?? null],
     );
+
+    // Уведомим клиента в Telegram о комментарии тренера
+    const w = owned[0];
+    await notifyClient(
+      w.client_id,
+      `💬 Тренер оставил разбор тренировки${w.name ? ` «${w.name}»` : ''}:\n\n${trainer_summary ?? 'Откройте приложение, чтобы посмотреть.'}`,
+      'trainer_comment',
+    ).catch(() => {});
+
     return { workout: rows[0] };
   });
 
