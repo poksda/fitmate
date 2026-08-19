@@ -390,4 +390,102 @@ const existing = await query<{ id: number; trainer_id: number | null }>(
     );
     return { entries: rows };
   });
+
+  // ---- Дневник питания (КБЖУ) ----
+
+  // Записать приём пищи: текст -> ИИ оценивает КБЖУ
+  app.post('/nutrition', async (request, reply) => {
+    const { client_id, food_text } = request.body as {
+      client_id: number;
+      food_text: string;
+    };
+    if (!client_id || !food_text?.trim()) {
+      return reply.code(400).send({ error: 'Нужен client_id и описание еды' });
+    }
+
+    const { estimateKbju } = await import('../ai.js');
+    const kbju = await estimateKbju(food_text.trim());
+
+    const rows = await query(
+      `INSERT INTO nutrition_entries (client_id, food_text, calories, protein, fats, carbs, source)
+       VALUES ($1, $2, $3, $4, $5, $6, 'ai') RETURNING *`,
+      [client_id, food_text.trim(), kbju.calories, kbju.protein, kbju.fats, kbju.carbs],
+    );
+    return { entry: rows[0] };
+  });
+
+  // Список записей питания (с фильтром по дням: days = 1 | 7)
+  app.get('/nutrition', async (request, reply) => {
+    const { client_id, days } = request.query as {
+      client_id: string;
+      days?: string;
+    };
+    if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
+
+    const limitDays = Number(days) || 7;
+    const from = new Date(Date.now() - limitDays * 24 * 60 * 60 * 1000).toISOString();
+
+    const rows = await query(
+      `SELECT id, food_text, calories, protein, fats, carbs, source, eaten_at
+       FROM nutrition_entries
+       WHERE client_id = $1 AND eaten_at >= $2
+       ORDER BY eaten_at DESC`,
+      [client_id, from],
+    );
+    return { entries: rows };
+  });
+
+  // Сводка за период: суммы и среднее по дням
+  app.get('/nutrition/summary', async (request, reply) => {
+    const { client_id, days } = request.query as {
+      client_id: string;
+      days?: string;
+    };
+    if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
+
+    const limitDays = Number(days) || 7;
+    const from = new Date(Date.now() - limitDays * 24 * 60 * 60 * 1000).toISOString();
+
+    const rows = await query<{
+      day: string;
+      calories: number | null;
+      protein: number | null;
+      fats: number | null;
+      carbs: number | null;
+      count: number;
+    }>(
+      `SELECT to_char(eaten_at AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day,
+              SUM(calories) AS calories, SUM(protein) AS protein,
+              SUM(fats) AS fats, SUM(carbs) AS carbs, COUNT(*) AS count
+       FROM nutrition_entries
+       WHERE client_id = $1 AND eaten_at >= $2
+       GROUP BY day ORDER BY day ASC`,
+      [client_id, from],
+    );
+    return { days: rows };
+  });
+
+  // ИИ-анализ питания за период
+  app.get('/nutrition/analysis', async (request, reply) => {
+    const { client_id, days } = request.query as {
+      client_id: string;
+      days?: string;
+    };
+    if (!client_id) return reply.code(400).send({ error: 'client_id обязателен' });
+
+    const limitDays = Number(days) || 7;
+    const from = new Date(Date.now() - limitDays * 24 * 60 * 60 * 1000).toISOString();
+
+    const rows = await query(
+      `SELECT food_text, calories, protein, fats, carbs, eaten_at
+       FROM nutrition_entries
+       WHERE client_id = $1 AND eaten_at >= $2
+       ORDER BY eaten_at ASC`,
+      [client_id, from],
+    );
+
+    const { analyzeNutrition } = await import('../ai.js');
+    const analysis = await analyzeNutrition(rows);
+    return { analysis };
+  });
 }

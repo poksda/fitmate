@@ -7,6 +7,7 @@ import { HomeScreen } from './screens/HomeScreen';
 import { WorkoutScreen } from './screens/WorkoutScreen';
 import { ProgressScreen } from './screens/ProgressScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
+import { NutritionScreen } from './screens/NutritionScreen';
 import { NewWorkoutScreen } from './screens/NewWorkoutScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 
@@ -17,7 +18,7 @@ export type Session = {
   workoutsLeft: number | null;
 };
 
-export type Screen = 'home' | 'workout' | 'new' | 'progress' | 'history' | 'profile';
+export type Screen = 'home' | 'workout' | 'new' | 'progress' | 'history' | 'nutrition' | 'profile';
 
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -113,6 +114,9 @@ export function App() {
       )}
       {screen === 'progress' && (
         <ProgressScreen session={session} onBack={() => setScreen('home')} />
+      )}
+      {screen === 'nutrition' && (
+        <NutritionScreen session={session} onBack={() => setScreen('home')} />
       )}
       {screen === 'history' && (
         <HistoryScreen

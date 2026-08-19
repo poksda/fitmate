@@ -111,4 +111,20 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ client_id: clientId, weight_kg: weightKg, note }),
     }),
+
+  // Дневник питания
+  addNutrition: (clientId: number, foodText: string) =>
+    request<{ entry: any }>('/nutrition', {
+      method: 'POST',
+      body: JSON.stringify({ client_id: clientId, food_text: foodText }),
+    }),
+
+  getNutrition: (clientId: number, days = 7) =>
+    request<{ entries: any[] }>(`/nutrition?client_id=${clientId}&days=${days}`),
+
+  getNutritionSummary: (clientId: number, days = 7) =>
+    request<{ days: any[] }>(`/nutrition/summary?client_id=${clientId}&days=${days}`),
+
+  getNutritionAnalysis: (clientId: number, days = 7) =>
+    request<{ analysis: string }>(`/nutrition/analysis?client_id=${clientId}&days=${days}`),
 };

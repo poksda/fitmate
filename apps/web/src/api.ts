@@ -112,4 +112,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ trainer_summary: trainerSummary }),
     }),
+
+  getClientNutrition: (id: number) =>
+    request<{ entries: any[] }>(`/clients/${id}/nutrition`),
+
+  getClientNutritionAnalysis: (id: number) =>
+    request<{ analysis: string }>(`/clients/${id}/nutrition/analysis`),
 };

@@ -84,6 +84,12 @@ export function Icon({ name, size = 18, className }: Props) {
           <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-2.9-.4-4.1-1L3 20l1-5.4A8.5 8.5 0 1 1 21 11.5z" />
         </svg>
       );
+    case 'food':
+      return (
+        <svg {...common} className={className}>
+          <path d="M4 3v7a2 2 0 0 0 2 2v9M9 3v7a2 2 0 0 1-2 2M4 3h5M4 12h5M16 3c-1 3 2 4 2 7 0 1.5-1 2-1 2v9M17 3c1 3-2 4-2 7" />
+        </svg>
+      );
     default:
       return null;
   }

@@ -198,6 +198,10 @@ export function HomeScreen({
           <span className="action-icon"><Icon name="dumbbell" size={20} /></span>
           <span>Тренировки</span>
         </button>
+        <button className="action-card" onClick={() => onNavigate('nutrition')}>
+          <span className="action-icon"><Icon name="food" size={20} /></span>
+          <span>Питание</span>
+        </button>
         <button className="action-card" onClick={() => onNavigate('progress')}>
           <span className="action-icon"><Icon name="scale" size={20} /></span>
           <span>Прогресс</span>

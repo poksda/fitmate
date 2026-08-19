@@ -259,6 +259,49 @@ export async function trainerRoutes(app: FastifyInstance) {
     return { entries: rows };
   });
 
+  // Дневник питания клиента
+  app.get('/clients/:id/nutrition', async (request, reply) => {
+    const trainerId = request.user!.id;
+    const { id } = request.params as { id: string };
+
+    const ok = await query(
+      'SELECT id FROM client_profiles WHERE id = $1 AND trainer_id = $2',
+      [id, trainerId],
+    );
+    if (ok.length === 0) return reply.code(403).send({ error: 'Это не ваш клиент' });
+
+    const rows = await query(
+      `SELECT id, food_text, calories, protein, fats, carbs, source, eaten_at
+       FROM nutrition_entries WHERE client_id = $1
+       ORDER BY eaten_at DESC LIMIT 50`,
+      [id],
+    );
+    return { entries: rows };
+  });
+
+  // ИИ-анализ питания клиента
+  app.get('/clients/:id/nutrition/analysis', async (request, reply) => {
+    const trainerId = request.user!.id;
+    const { id } = request.params as { id: string };
+
+    const ok = await query(
+      'SELECT id FROM client_profiles WHERE id = $1 AND trainer_id = $2',
+      [id, trainerId],
+    );
+    if (ok.length === 0) return reply.code(403).send({ error: 'Это не ваш клиент' });
+
+    const rows = await query(
+      `SELECT food_text, calories, protein, fats, carbs, eaten_at
+       FROM nutrition_entries WHERE client_id = $1
+       ORDER BY eaten_at ASC`,
+      [id],
+    );
+
+    const { analyzeNutrition } = await import('../ai.js');
+    const analysis = await analyzeNutrition(rows);
+    return { analysis };
+  });
+
   // Комментарий тренера к тренировке (тренерский разбор)
   app.post('/workouts/:id/comment', async (request, reply) => {
     const trainerId = request.user!.id;

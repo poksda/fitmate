@@ -70,6 +70,11 @@ export function ClientPage() {
     7: 'Вс',
   };
 
+  // Питание
+  const [nutrition, setNutrition] = useState<any[]>([]);
+  const [nutritionAnalysis, setNutritionAnalysis] = useState<string | null>(null);
+  const [nutritionLoading, setNutritionLoading] = useState(false);
+
   const reload = async (clientId: number) => {
     const res = await api.getClient(clientId);
     setClient(res.client);
@@ -87,6 +92,10 @@ export function ClientPage() {
         });
         setPlan(map);
       })
+      .catch(() => {});
+    api
+      .getClientNutrition(clientId)
+      .then((r) => setNutrition(r.entries))
       .catch(() => {});
   };
 
@@ -170,6 +179,18 @@ export function ClientPage() {
       .filter((p) => p.workout_name.length > 0);
     await api.updateClientPlan(Number(id!), items);
     reload(Number(id!));
+  };
+
+  const runNutritionAnalysis = async () => {
+    if (!id) return;
+    setNutritionLoading(true);
+    setNutritionAnalysis(null);
+    try {
+      const res = await api.getClientNutritionAnalysis(Number(id));
+      setNutritionAnalysis(res.analysis);
+    } finally {
+      setNutritionLoading(false);
+    }
   };
 
   const chartMax = Math.max(...progress.map((p) => p.weight_kg), latestWeight ?? 0) * 1.05;
@@ -311,6 +332,62 @@ export function ClientPage() {
           </div>
         </>
       )}
+
+      <div className="section-title">
+        <div className="icon"><Icon name="food" size={16} /></div>
+        Питание (КБЖУ)
+      </div>
+      <div className="card">
+        {nutrition.length === 0 ? (
+          <p className="muted">Пока нет записей питания.</p>
+        ) : (
+          <>
+            <table>
+              <thead>
+                <tr>
+                  <th>Что съедено</th>
+                  <th>Ккал</th>
+                  <th>Б</th>
+                  <th>Ж</th>
+                  <th>У</th>
+                  <th>Когда</th>
+                </tr>
+              </thead>
+              <tbody>
+                {nutrition.map((e) => (
+                  <tr key={e.id}>
+                    <td>{e.food_text}</td>
+                    <td>{Math.round(e.calories)}</td>
+                    <td>{Math.round(e.protein)}</td>
+                    <td>{Math.round(e.fats)}</td>
+                    <td>{Math.round(e.carbs)}</td>
+                    <td className="muted">
+                      {new Date(e.eaten_at).toLocaleDateString('ru-RU', {
+                        day: 'numeric',
+                        month: 'short',
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button
+              className="btn"
+              style={{ marginTop: 14 }}
+              onClick={runNutritionAnalysis}
+              disabled={nutritionLoading}
+            >
+              {nutritionLoading ? 'Анализирую…' : 'ИИ-анализ питания'}
+            </button>
+          </>
+        )}
+        {nutritionAnalysis && (
+          <div className="summary" style={{ marginTop: 14 }}>
+            <span className="label">Разбор ИИ</span>
+            {nutritionAnalysis}
+          </div>
+        )}
+      </div>
 
       <div className="section-title">
         <div className="icon"><Icon name="dumbbell" size={16} /></div>

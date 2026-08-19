@@ -82,6 +82,20 @@ CREATE TABLE IF NOT EXISTS weekly_plans (
   UNIQUE (client_id, day_of_week)
 );
 
+-- Дневник питания (КБЖУ): одна строка = один приём пищи/продукт
+CREATE TABLE IF NOT EXISTS nutrition_entries (
+  id          BIGSERIAL PRIMARY KEY,
+  client_id   BIGINT NOT NULL REFERENCES client_profiles(id) ON DELETE CASCADE,
+  food_text   TEXT NOT NULL,
+  calories    NUMERIC(7,1),
+  protein     NUMERIC(6,1),
+  fats        NUMERIC(6,1),
+  carbs       NUMERIC(6,1),
+  source      TEXT NOT NULL DEFAULT 'ai' CHECK (source IN ('ai', 'manual')),
+  eaten_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Индексы для частых запросов
 CREATE INDEX IF NOT EXISTS idx_client_profiles_trainer ON client_profiles(trainer_id);
 CREATE INDEX IF NOT EXISTS idx_workouts_client ON workouts(client_id);
@@ -89,3 +103,5 @@ CREATE INDEX IF NOT EXISTS idx_exercises_workout ON exercises(workout_id);
 CREATE INDEX IF NOT EXISTS idx_sets_exercise ON sets(exercise_id);
 CREATE INDEX IF NOT EXISTS idx_progress_client ON progress_entries(client_id);
 CREATE INDEX IF NOT EXISTS idx_weekly_plans_client ON weekly_plans(client_id);
+CREATE INDEX IF NOT EXISTS idx_nutrition_client ON nutrition_entries(client_id);
+CREATE INDEX IF NOT EXISTS idx_nutrition_eaten_at ON nutrition_entries(eaten_at);
