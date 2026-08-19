@@ -405,7 +405,7 @@ export async function trainerRoutes(app: FastifyInstance) {
       w.client_id,
       `💬 Тренер оставил разбор тренировки${w.name ? ` «${w.name}»` : ''}:\n\n${trainer_summary ?? 'Откройте приложение, чтобы посмотреть.'}`,
       'trainer_comment',
-    ).catch(() => {});
+    ).catch((err) => console.error('Не удалось уведомить клиента:', err.message));
 
     return { workout: rows[0] };
   });

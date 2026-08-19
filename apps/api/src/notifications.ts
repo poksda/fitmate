@@ -8,12 +8,12 @@ export async function notifyClient(
 ) {
   const rows = await query(
     `INSERT INTO notifications (client_profile_id, telegram_id, text, type)
-     SELECT cp.id, u.telegram_id, $3, $4
+     SELECT cp.id, u.telegram_id, $2, $3
      FROM client_profiles cp
      JOIN users u ON u.id = cp.user_id
      WHERE cp.id = $1 AND u.telegram_id IS NOT NULL
      RETURNING *`,
-    [clientProfileId, null, text, type],
+    [clientProfileId, text, type],
   );
   return rows[0] ?? null;
 }
